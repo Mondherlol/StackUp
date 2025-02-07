@@ -1,0 +1,16 @@
+{
+  "name": "stackup",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/frontend"
+  ],
+  "scripts": {
+    "npx concurrently": "npm run start --workspace=backend && npm run start --workspace=frontend"
+  },
+  "version": "1.0.0",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
