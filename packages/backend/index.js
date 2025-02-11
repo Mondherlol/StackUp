@@ -1,0 +1,56 @@
+const express = require("express");
+const logger = require("morgan");
+
+const http = require("http");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const app = express();
+
+// Cors Configuration
+const corstAllowAll = {
+  credentials: true,
+  origin: true,
+  "Access-Control-Allow-Origin": "*",
+};
+
+app.use(cors(corstAllowAll));
+app.options("*", cors(corstAllowAll));
+
+// Server creation
+const server = http.createServer(app);
+
+const port = 9091;
+
+// Database connection
+mongoose
+  .connect("mongodb+srv://admin:admin@stackup.bikox.mongodb.net/test", {})
+  .then(() => {
+    console.log("Database connected");
+  })
+  .catch((err) => {
+    console.log("Error in connecting to the database", err);
+  });
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
+
+app.use(logger("dev"));
+
+// Extend the limit of the body
+app.use(express.json({ limit: "50mb" }));
+app.use(bodyParser.json({ limit: "50mb" }));
+
+app.use("/ping", (req, res) => {
+  res.json({ message: "pong" });
+});
+
+app.use("/api/user/", require("./routes/userRoute"));
+
+server.listen(port, () => {
+  console.log(`http://localhost:${port}`);
+});
