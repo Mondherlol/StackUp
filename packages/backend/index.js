@@ -7,6 +7,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
 
+const path = require("path");
+
 // Server creation
 const server = http.createServer(app);
 
@@ -40,6 +42,8 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use("/ping", (req, res) => {
   res.json({ message: "pong" });
 });
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/user/", require("./routes/userRoute"));
 app.use("/api/warehouse/", require("./routes/warehouseRoute"));

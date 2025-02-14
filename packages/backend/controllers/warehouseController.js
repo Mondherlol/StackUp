@@ -1,4 +1,18 @@
 const Warehouse = require("../models/WarehouseModel");
+const multer = require("multer");
+const path = require("path");
+
+// Configuration de Multer pour stocker les images dans "uploads/"
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // Nom unique
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const createWarehouse = async (req, res) => {
   try {
@@ -20,6 +34,8 @@ const createWarehouse = async (req, res) => {
       });
     }
 
+    console.log(req.file);
+
     const warehouse = new Warehouse({
       name,
       location: req.body.location,
@@ -29,6 +45,7 @@ const createWarehouse = async (req, res) => {
       height: req.body.height,
       depth: req.body.depth,
       addedBy: req.user._id,
+      planImage: req.file ? `/uploads/${req.file.filename}` : null, // Stockage du chemin de l'image
     });
 
     await warehouse.save();
@@ -107,4 +124,5 @@ module.exports = {
   getWarehousesByUser,
   getWarehouseById,
   joinWarehouse,
+  upload,
 };

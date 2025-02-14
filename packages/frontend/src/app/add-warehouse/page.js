@@ -49,7 +49,16 @@ const AddWarehouse = () => {
     e.preventDefault();
 
     try {
-      const response = await axiosInstance.post("/warehouse", formData);
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        formDataToSend.append(key, formData[key]);
+      });
+
+      const response = await axiosInstance.post("/warehouse", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       console.log(response.data);
       toast.success("Warehouse created successfully");

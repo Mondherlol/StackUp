@@ -66,6 +66,10 @@ const warehouseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  planImage: {
+    type: String,
+    required: false,
+  },
 });
 
 module.exports = mongoose.model("Warehouse", warehouseSchema);

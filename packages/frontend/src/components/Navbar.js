@@ -1,11 +1,12 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
 import { FiChevronDown, FiLogOut, FiSettings } from "react-icons/fi";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,7 +39,10 @@ const Navbar = () => {
               <span>Paramètres</span>
             </li>
             <li
-              onClick={logout}
+              onClick={() => {
+                logout();
+                router.push("/login");
+              }}
               className="flex items-center space-x-3 px-4 py-2 hover:bg-blue-100 cursor-pointer"
             >
               <FiLogOut className="text-red-600" />
