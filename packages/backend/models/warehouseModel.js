@@ -28,18 +28,26 @@ const warehouseSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  authorizedUsers: [
+  members: [
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
       },
-      status: {
+      role: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: "pending",
+        required: true,
+        enum: ["ADMIN", "MEMBER", "GUEST"],
+        default: "MEMBER",
       },
+    },
+  ],
+  pendingUsers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   ],
   createdAt: {

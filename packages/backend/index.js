@@ -42,6 +42,7 @@ app.use("/ping", (req, res) => {
 });
 
 app.use("/api/user/", require("./routes/userRoute"));
+app.use("/api/warehouse/", require("./routes/warehouseRoute"));
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
