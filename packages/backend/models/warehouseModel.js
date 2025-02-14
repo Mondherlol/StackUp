@@ -5,21 +5,29 @@ const warehouseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  description: {
+    type: String,
+    required: false,
+  },
   location: {
     address: { type: String, required: false },
     city: { type: String, required: false },
     country: { type: String, required: false },
-    coordinates: {
-      lat: { type: Number, required: false },
-      lng: { type: Number, required: false },
-    },
   },
   blocs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bloc" }], // Liste des blocs dans l'entrepôt
-  maxCapacity: {
+  maxWeight: {
     type: Number,
     required: false,
   },
-  maxWeight: {
+  width: {
+    type: Number,
+    required: false,
+  },
+  height: {
+    type: Number,
+    required: false,
+  },
+  depth: {
     type: Number,
     required: false,
   },

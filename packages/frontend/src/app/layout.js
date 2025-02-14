@@ -27,10 +27,12 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex`} // Ajout de flex
       >
         <AuthProvider>
-          <Toaster />
           <Navbar />
           <Sidebar />
-          <main className="flex-1">{children}</main>{" "}
+          <main className="flex-1">
+            <Toaster />
+            {children}
+          </main>{" "}
           {/* Permet au contenu de prendre l’espace restant */}
         </AuthProvider>
       </body>

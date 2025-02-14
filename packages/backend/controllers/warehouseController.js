@@ -8,11 +8,26 @@ const createWarehouse = async (req, res) => {
       return res.status(400).json({ message: "Name is required" });
     }
 
+    // Check if warehouse with the same name exists for the user
+    const existingWarehouse = await Warehouse.findOne({
+      name,
+      addedBy: req.user._id,
+    });
+
+    if (existingWarehouse) {
+      return res.status(400).json({
+        message: "You already have a warehouse with the same name.",
+      });
+    }
+
     const warehouse = new Warehouse({
       name,
       location: req.body.location,
-      maxCapacity: req.body.maxCapacity,
       maxWeight: req.body.maxWeight,
+      description: req.body.description,
+      width: req.body.width,
+      height: req.body.height,
+      depth: req.body.depth,
       addedBy: req.user._id,
     });
 
