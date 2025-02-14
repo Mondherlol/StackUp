@@ -36,9 +36,15 @@ const createWarehouse = async (req, res) => {
 
     console.log(req.file);
 
+    const location = {
+      address: req.body.address,
+      city: req.body.city,
+      country: req.body.country,
+    };
+
     const warehouse = new Warehouse({
       name,
-      location: req.body.location,
+      location: location,
       maxWeight: req.body.maxWeight,
       description: req.body.description,
       width: req.body.width,

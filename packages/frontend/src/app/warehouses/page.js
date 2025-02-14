@@ -29,9 +29,12 @@ const WarehousesList = () => {
             className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition"
           >
             <h3 className="text-xl font-semibold mb-2">{warehouse.name}</h3>
-            <p className="text-gray-600">
-              {warehouse.city}, {warehouse.country}
-            </p>
+            {warehouse.location && (
+              <p className="text-gray-600">
+                {warehouse.location.city}, {warehouse.location.country}
+              </p>
+            )}
+
             <p className="text-gray-700 mt-2 text-sm">
               {warehouse.description}
             </p>
