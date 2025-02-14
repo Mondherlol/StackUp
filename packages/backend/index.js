@@ -7,16 +7,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
 
-// Cors Configuration
-const corstAllowAll = {
-  credentials: true,
-  origin: true,
-  "Access-Control-Allow-Origin": "*",
-};
-
-app.use(cors(corstAllowAll));
-app.options("*", cors(corstAllowAll));
-
 // Server creation
 const server = http.createServer(app);
 
@@ -38,6 +28,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.set("trust proxy", true);
 
 app.use(logger("dev"));
 
