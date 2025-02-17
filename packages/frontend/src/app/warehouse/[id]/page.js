@@ -37,8 +37,7 @@ const WarehousePage = () => {
       <div className="flex justify-between items-center bg-white p-4 shadow-md rounded-md">
         <h1 className="text-xl font-bold">{warehouse.name}</h1>
         <div>
-          <Button className="mr-2">Modifier les infos</Button>
-          <Button variant="outline">Inviter des collaborateurs</Button>
+          <Button className="mr-2">Update informations</Button>
         </div>
       </div>
       <WarehouseView warehouse={warehouse} />;

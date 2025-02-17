@@ -110,7 +110,7 @@ const WarehouseView = ({ warehouse }) => {
           <FaMinus />
         </button>
         <button className="p-2 bg-gray-100 rounded" onClick={addBlock}>
-          ➕ Ajouter un bloc
+          ➕ Add a block
         </button>
       </div>
     </div>

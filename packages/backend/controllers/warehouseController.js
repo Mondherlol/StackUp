@@ -4,6 +4,8 @@ const User = require("../models/userModel");
 const multer = require("multer");
 const path = require("path");
 
+const crypto = require("crypto");
+
 // Configuration de Multer pour stocker les images dans "uploads/"
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -70,10 +72,12 @@ const createWarehouse = async (req, res) => {
 const getWarehousesByUser = async (req, res) => {
   try {
     const warehouses = await Warehouse.find({ addedBy: req.user._id }).populate(
-      {
-        path: "members.user",
-        select: "email username",
-      }
+      [
+        {
+          path: "members.user",
+          select: "email username",
+        },
+      ]
     );
 
     res.status(200).json({ warehouses });
@@ -84,10 +88,12 @@ const getWarehousesByUser = async (req, res) => {
 
 const getWarehouseById = async (req, res) => {
   try {
-    const warehouse = await Warehouse.findById(req.params.id).populate({
-      path: "members.user",
-      select: "email username",
-    });
+    const warehouse = await Warehouse.findById(req.params.id).populate([
+      {
+        path: "members.user",
+        select: "email username",
+      },
+    ]);
 
     if (!warehouse) {
       return res.status(404).json({ message: "Warehouse not found" });
@@ -99,11 +105,10 @@ const getWarehouseById = async (req, res) => {
   }
 };
 
-const joinWarehouse = async (req, res) => {
+const generateInviteLink = async (req, res) => {
   try {
     const { warehouseId } = req.params;
-    const warehouse = await Warehouse.findById(warehouseId);
-    const role = req.body.role;
+    const { role } = req.body;
 
     if (!role || !["ADMIN", "MEMBER", "GUEST"].includes(role)) {
       return res.status(400).json({
@@ -111,90 +116,103 @@ const joinWarehouse = async (req, res) => {
       });
     }
 
-    if (!warehouse) {
-      return res.status(404).json({ message: "Warehouse not found" });
-    }
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(warehouseId, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
 
-    const user = req.user;
-
-    if (
-      warehouse.members.find((member) => member.user.toString() === user._id)
-    ) {
-      return res.status(400).json({ message: "User already authorized" });
-    }
-
-    warehouse.members.push({ user: user._id, role: role });
+    const inviteToken = crypto.randomBytes(16).toString("hex");
+    warehouse.inviteToken = inviteToken;
+    warehouse.inviteRole = role;
+    warehouse.inviteTokenExpiry = Date.now() + 24 * 60 * 60 * 1000; // Expire après 24h
     await warehouse.save();
 
-    user.warehouses.push(warehouse._id);
-    await user.save();
-
-    res.status(200).json({ message: "User authorized successfully" });
+    const inviteLink = `${process.env.FRONTEND_URL}/join/${inviteToken}`;
+    res.status(200).json({ inviteLink });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
+const joinWarehouse = async (req, res) => {
+  try {
+    const { inviteToken } = req.params;
+    const warehouse = await Warehouse.findOne({ inviteToken });
+
+    if (!warehouse || warehouse.inviteTokenExpiry < Date.now()) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired invite link" });
+    }
+
+    if (
+      warehouse.members.some(
+        (member) => member.user.toString() === req.user._id.toString()
+      )
+    ) {
+      return res.status(400).json({ message: "You're already a member" });
+    }
+
+    if (warehouse.addedBy.toString() === req.user._id.toString()) {
+      return res
+        .status(400)
+        .json({
+          message: "You're already the owner of this warehouse... Dumbass",
+        });
+    }
+
+    warehouse.members.push({ user: req.user._id, role: warehouse.inviteRole });
+    await warehouse.save();
+
+    res.status(200).json({ message: "Successfully joined the warehouse" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getWarehouseAndCheckPermission = async (warehouseId, userId) => {
+  const warehouse = await Warehouse.findById(warehouseId);
+  if (!warehouse) {
+    return { error: { status: 404, message: "Warehouse not found" } };
+  }
+
+  const isAdmin = warehouse.members.some(
+    (member) =>
+      member.user.toString() === userId.toString() && member.role === "ADMIN"
+  );
+
+  const isOwner = warehouse.addedBy.toString() === userId.toString();
+
+  return { warehouse, isAuthorized: isAdmin || isOwner };
+};
+
 const addMember = async (req, res) => {
   try {
     const { warehouseId } = req.params;
-    const warehouse = await Warehouse.findById(warehouseId);
-    const email = req.body.email;
-    const role = req.body.role;
+    const { email, role } = req.body;
 
     if (!role || !["ADMIN", "MEMBER", "GUEST"].includes(role)) {
-      return res.status(400).json({
-        message: "Role is required and must be ADMIN, MEMBER or GUEST",
-      });
+      return res.status(400).json({ message: "Invalid role" });
     }
 
-    if (!warehouse) {
-      return res.status(404).json({ message: "Warehouse not found" });
-    }
-
-    const isAdmin = warehouse.members.find(
-      (member) =>
-        member.user.toString() === req.user._id.toString() &&
-        member.role === "ADMIN"
-    );
-
-    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
-
-    if (!isAdmin && !isOwner) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to invite members" });
-    }
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(warehouseId, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
 
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (
-      warehouse.members.find(
+      warehouse.members.some(
         (member) => member.user.toString() === user._id.toString()
       )
     ) {
-      return res.status(400).json({ message: "User already member" });
+      return res.status(400).json({ message: "User already a member" });
     }
 
-    warehouse.members.push({ user: user._id, role: role });
-
-    // If the user was pending, remove him from the pending list
-    if (
-      warehouse.pendingUsers.find(
-        (pendingUser) => pendingUser.toString() === user._id
-      )
-    ) {
-      warehouse.pendingUsers = warehouse.pendingUsers.filter(
-        (pendingUser) => pendingUser.toString() !== user._id
-      );
-    }
-
+    warehouse.members.push({ user: user._id, role });
     await warehouse.save();
-
     res.status(200).json({ message: "User added successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -204,32 +222,16 @@ const addMember = async (req, res) => {
 const removeMember = async (req, res) => {
   try {
     const { warehouseId, memberId } = req.params;
-    const warehouse = await Warehouse.findById(warehouseId);
-
-    if (!warehouse) {
-      return res.status(404).json({ message: "Warehouse not found" });
-    }
-
-    const isAdmin = warehouse.members.find(
-      (member) =>
-        member.user.toString() === req.user._id.toString() &&
-        member.role === "ADMIN"
-    );
-
-    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
-
-    if (!isAdmin && !isOwner) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to remove members" });
-    }
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(warehouseId, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
 
     warehouse.members = warehouse.members.filter(
       (member) => member._id.toString() !== memberId.toString()
     );
 
     await warehouse.save();
-
     res.status(200).json({ message: "Member removed successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -240,43 +242,23 @@ const changeRole = async (req, res) => {
   try {
     const { warehouseId, memberId } = req.params;
     const { role } = req.body;
-    const warehouse = await Warehouse.findById(warehouseId);
-
-    if (!warehouse) {
-      return res.status(404).json({ message: "Warehouse not found" });
-    }
 
     if (!role || !["ADMIN", "MEMBER", "GUEST"].includes(role)) {
-      return res.status(400).json({
-        message: "Role is required and must be ADMIN, MEMBER or GUEST",
-      });
+      return res.status(400).json({ message: "Invalid role" });
     }
 
-    const isAdmin = warehouse.members.find(
-      (member) =>
-        member.user.toString() === req.user._id.toString() &&
-        member.role === "ADMIN"
-    );
-
-    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
-
-    if (!isAdmin && !isOwner) {
-      return res
-        .status(403)
-        .json({ message: "You are not authorized to change role" });
-    }
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(warehouseId, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
 
     const member = warehouse.members.find(
       (member) => member._id.toString() === memberId.toString()
     );
-
-    if (!member) {
-      return res.status(404).json({ message: "Member not found" });
-    }
+    if (!member) return res.status(404).json({ message: "Member not found" });
 
     member.role = role;
     await warehouse.save();
-
     res.status(200).json({ message: "Role changed successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -287,6 +269,7 @@ module.exports = {
   createWarehouse,
   getWarehousesByUser,
   getWarehouseById,
+  generateInviteLink,
   joinWarehouse,
   addMember,
   removeMember,

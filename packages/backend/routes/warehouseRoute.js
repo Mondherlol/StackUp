@@ -4,6 +4,7 @@ const {
   createWarehouse,
   getWarehousesByUser,
   getWarehouseById,
+  generateInviteLink,
   joinWarehouse,
   addMember,
   removeMember,
@@ -21,6 +22,11 @@ warehouseRouter.post(
 );
 warehouseRouter.get("/", authMiddleware, getWarehousesByUser);
 warehouseRouter.get("/:id", authMiddleware, getWarehouseById);
+warehouseRouter.post(
+  "/:warehouseId/invite",
+  authMiddleware,
+  generateInviteLink
+);
 warehouseRouter.post("/:warehouseId/addMember", authMiddleware, addMember);
 warehouseRouter.put("/:warehouseId/role/:memberId", authMiddleware, changeRole);
 warehouseRouter.delete(
@@ -28,6 +34,6 @@ warehouseRouter.delete(
   authMiddleware,
   removeMember
 );
-warehouseRouter.post("/:warehouseId/join", authMiddleware, joinWarehouse);
+warehouseRouter.post("/:inviteToken/join", authMiddleware, joinWarehouse);
 
 module.exports = warehouseRouter;

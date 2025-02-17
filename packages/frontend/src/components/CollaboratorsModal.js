@@ -1,21 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { FaTimes, FaUserPlus, FaTrash } from "react-icons/fa";
+import { FaTimes, FaUserPlus, FaTrash, FaClipboard } from "react-icons/fa";
 import { motion } from "framer-motion";
 import axiosInstance from "@/utils/axiosConfig";
 import { toast } from "react-hot-toast";
 
-const CollaboratorsModal = ({
-  isOpen,
-  onClose,
-  warehouse,
-  onUpdate,
-  setWarehouse,
-}) => {
+const CollaboratorsModal = ({ isOpen, onClose, warehouse, onUpdate }) => {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [role, setRole] = useState("MEMBER");
+  const [invitationRole, setInvitationRole] = useState("MEMBER");
+  const [inviteLink, setInviteLink] = useState("");
 
   useEffect(() => {
     if (search.trim() !== "" && !selectedUser) {
@@ -24,7 +20,6 @@ const CollaboratorsModal = ({
           const response = await axiosInstance.get(
             `/user/search?query=${search}`
           );
-          // Remove the users already in the warehouse and the owner
           const filteredUsers = response.data.filter(
             (user) =>
               user._id !== warehouse.addedBy &&
@@ -48,6 +43,26 @@ const CollaboratorsModal = ({
       setSelectedUser(null);
     }
   }, [search]);
+
+  const generateInviteLink = async () => {
+    try {
+      const response = await axiosInstance.post(
+        `/warehouse/${warehouse._id}/invite`,
+        { role: invitationRole }
+      );
+      const link = response.data.inviteLink;
+      setInviteLink(link);
+      toast.success("Invite link generated successfully.");
+    } catch (error) {
+      console.error("Error generating invite link:", error);
+      toast.error("Error generating invite link.");
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(inviteLink);
+    toast.success("Invite link copied to clipboard.");
+  };
 
   const handleInvite = async () => {
     if (selectedUser) {
@@ -88,6 +103,7 @@ const CollaboratorsModal = ({
       await onUpdate();
     }
   };
+
   const handleChangeRole = async (memberId, newRole) => {
     try {
       await axiosInstance.put(`/warehouse/${warehouse._id}/role/${memberId}`, {
@@ -124,7 +140,6 @@ const CollaboratorsModal = ({
           </button>
         </div>
 
-        {/* Barre de recherche, select role et bouton Invite */}
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-grow">
             <input
@@ -153,7 +168,6 @@ const CollaboratorsModal = ({
             )}
           </div>
 
-          {/* Select Role */}
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -164,7 +178,6 @@ const CollaboratorsModal = ({
             <option value="GUEST">Guest</option>
           </select>
 
-          {/* Bouton Invite */}
           <button
             onClick={handleInvite}
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${
@@ -178,7 +191,6 @@ const CollaboratorsModal = ({
           </button>
         </div>
 
-        {/* Liste des collaborateurs */}
         <div className="max-h-60 overflow-y-auto mt-4">
           {warehouse.members.length > 0 ? (
             warehouse.members.map((member) => (
@@ -211,6 +223,36 @@ const CollaboratorsModal = ({
             <p className="text-gray-500 text-center">No collaborators yet.</p>
           )}
         </div>
+
+        <h3 className="text-lg font-semibold mt-6 mb-2">Invitation Link</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <select
+            value={invitationRole}
+            onChange={(e) => setInvitationRole(e.target.value)}
+            className="p-2 border rounded-lg"
+          >
+            <option value="ADMIN">Admin</option>
+            <option value="MEMBER">Member</option>
+            <option value="GUEST">Guest</option>
+          </select>
+          <button
+            onClick={generateInviteLink}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
+            Generate Invite Link
+          </button>
+          {inviteLink && (
+            <button
+              onClick={copyToClipboard}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+            >
+              <FaClipboard /> Copy Link
+            </button>
+          )}
+        </div>
+        <h5 className="text-gray-500 text-sm">
+          Generating a new link will make the previous one invalid.
+        </h5>
       </motion.div>
     </div>
   );

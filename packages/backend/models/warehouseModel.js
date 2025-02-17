@@ -51,13 +51,6 @@ const warehouseSchema = new mongoose.Schema({
       },
     },
   ],
-  pendingUsers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  ],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -69,6 +62,20 @@ const warehouseSchema = new mongoose.Schema({
   planImage: {
     type: String,
     required: false,
+  },
+  inviteToken: {
+    type: String,
+    required: false,
+  },
+  inviteTokenExpires: {
+    type: Date,
+    required: false,
+  },
+  inviteRole: {
+    type: String,
+    required: false,
+    enum: ["ADMIN", "MEMBER", "GUEST"],
+    default: "MEMBER",
   },
 });
 
