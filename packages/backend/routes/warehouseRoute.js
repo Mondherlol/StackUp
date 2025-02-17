@@ -5,6 +5,9 @@ const {
   getWarehousesByUser,
   getWarehouseById,
   joinWarehouse,
+  addMember,
+  removeMember,
+  changeRole,
   upload,
 } = require("../controllers/warehouseController");
 
@@ -18,6 +21,13 @@ warehouseRouter.post(
 );
 warehouseRouter.get("/", authMiddleware, getWarehousesByUser);
 warehouseRouter.get("/:id", authMiddleware, getWarehouseById);
+warehouseRouter.post("/:warehouseId/addMember", authMiddleware, addMember);
+warehouseRouter.put("/:warehouseId/role/:memberId", authMiddleware, changeRole);
+warehouseRouter.delete(
+  "/:warehouseId/removeMember/:memberId",
+  authMiddleware,
+  removeMember
+);
 warehouseRouter.post("/:warehouseId/join", authMiddleware, joinWarehouse);
 
 module.exports = warehouseRouter;

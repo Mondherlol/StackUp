@@ -1,4 +1,6 @@
-const Warehouse = require("../models/WarehouseModel");
+const Warehouse = require("../models/warehouseModel");
+const User = require("../models/userModel");
+
 const multer = require("multer");
 const path = require("path");
 
@@ -67,7 +69,12 @@ const createWarehouse = async (req, res) => {
 
 const getWarehousesByUser = async (req, res) => {
   try {
-    const warehouses = await Warehouse.find({ addedBy: req.user._id });
+    const warehouses = await Warehouse.find({ addedBy: req.user._id }).populate(
+      {
+        path: "members.user",
+        select: "email username",
+      }
+    );
 
     res.status(200).json({ warehouses });
   } catch (error) {
@@ -77,7 +84,10 @@ const getWarehousesByUser = async (req, res) => {
 
 const getWarehouseById = async (req, res) => {
   try {
-    const warehouse = await Warehouse.findById(req.params.id);
+    const warehouse = await Warehouse.findById(req.params.id).populate({
+      path: "members.user",
+      select: "email username",
+    });
 
     if (!warehouse) {
       return res.status(404).json({ message: "Warehouse not found" });
@@ -125,10 +135,161 @@ const joinWarehouse = async (req, res) => {
   }
 };
 
+const addMember = async (req, res) => {
+  try {
+    const { warehouseId } = req.params;
+    const warehouse = await Warehouse.findById(warehouseId);
+    const email = req.body.email;
+    const role = req.body.role;
+
+    if (!role || !["ADMIN", "MEMBER", "GUEST"].includes(role)) {
+      return res.status(400).json({
+        message: "Role is required and must be ADMIN, MEMBER or GUEST",
+      });
+    }
+
+    if (!warehouse) {
+      return res.status(404).json({ message: "Warehouse not found" });
+    }
+
+    const isAdmin = warehouse.members.find(
+      (member) =>
+        member.user.toString() === req.user._id.toString() &&
+        member.role === "ADMIN"
+    );
+
+    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to invite members" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (
+      warehouse.members.find(
+        (member) => member.user.toString() === user._id.toString()
+      )
+    ) {
+      return res.status(400).json({ message: "User already member" });
+    }
+
+    warehouse.members.push({ user: user._id, role: role });
+
+    // If the user was pending, remove him from the pending list
+    if (
+      warehouse.pendingUsers.find(
+        (pendingUser) => pendingUser.toString() === user._id
+      )
+    ) {
+      warehouse.pendingUsers = warehouse.pendingUsers.filter(
+        (pendingUser) => pendingUser.toString() !== user._id
+      );
+    }
+
+    await warehouse.save();
+
+    res.status(200).json({ message: "User added successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const removeMember = async (req, res) => {
+  try {
+    const { warehouseId, memberId } = req.params;
+    const warehouse = await Warehouse.findById(warehouseId);
+
+    if (!warehouse) {
+      return res.status(404).json({ message: "Warehouse not found" });
+    }
+
+    const isAdmin = warehouse.members.find(
+      (member) =>
+        member.user.toString() === req.user._id.toString() &&
+        member.role === "ADMIN"
+    );
+
+    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to remove members" });
+    }
+
+    warehouse.members = warehouse.members.filter(
+      (member) => member._id.toString() !== memberId.toString()
+    );
+
+    await warehouse.save();
+
+    res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const changeRole = async (req, res) => {
+  try {
+    const { warehouseId, memberId } = req.params;
+    const { role } = req.body;
+    const warehouse = await Warehouse.findById(warehouseId);
+
+    if (!warehouse) {
+      return res.status(404).json({ message: "Warehouse not found" });
+    }
+
+    if (!role || !["ADMIN", "MEMBER", "GUEST"].includes(role)) {
+      return res.status(400).json({
+        message: "Role is required and must be ADMIN, MEMBER or GUEST",
+      });
+    }
+
+    const isAdmin = warehouse.members.find(
+      (member) =>
+        member.user.toString() === req.user._id.toString() &&
+        member.role === "ADMIN"
+    );
+
+    const isOwner = warehouse.addedBy.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to change role" });
+    }
+
+    const member = warehouse.members.find(
+      (member) => member._id.toString() === memberId.toString()
+    );
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    member.role = role;
+    await warehouse.save();
+
+    res.status(200).json({ message: "Role changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createWarehouse,
   getWarehousesByUser,
   getWarehouseById,
   joinWarehouse,
+  addMember,
+  removeMember,
+  changeRole,
   upload,
 };
