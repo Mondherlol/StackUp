@@ -55,7 +55,7 @@ const createWarehouse = async (req, res) => {
       height: req.body.height,
       depth: req.body.depth,
       addedBy: req.user._id,
-      planImage: req.file ? `/uploads/${req.file.filename}` : null, // Stockage du chemin de l'image
+      planImage: req.file ? `/uploads/${req.file.filename}` : null, // File path
     });
 
     await warehouse.save();
@@ -154,11 +154,9 @@ const joinWarehouse = async (req, res) => {
     }
 
     if (warehouse.addedBy.toString() === req.user._id.toString()) {
-      return res
-        .status(400)
-        .json({
-          message: "You're already the owner of this warehouse... Dumbass",
-        });
+      return res.status(400).json({
+        message: "You're already the owner of this warehouse... Dumbass",
+      });
     }
 
     warehouse.members.push({ user: req.user._id, role: warehouse.inviteRole });

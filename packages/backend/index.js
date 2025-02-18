@@ -47,6 +47,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/user/", require("./routes/userRoute"));
 app.use("/api/warehouse/", require("./routes/warehouseRoute"));
+app.use("/api/bloc/", require("./routes/blocRoute"));
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);

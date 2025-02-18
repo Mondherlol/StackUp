@@ -52,7 +52,9 @@ const CollaboratorsModal = ({ isOpen, onClose, warehouse, onUpdate }) => {
       );
       const link = response.data.inviteLink;
       setInviteLink(link);
-      toast.success("Invite link generated successfully.");
+      navigator.clipboard.writeText(link);
+
+      toast.success("Invitation link generated and copied to clipboard.");
     } catch (error) {
       console.error("Error generating invite link:", error);
       toast.error("Error generating invite link.");

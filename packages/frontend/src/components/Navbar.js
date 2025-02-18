@@ -13,7 +13,7 @@ const Navbar = () => {
   if (!user) return null;
 
   return (
-    <div className="fixed top-4 right-6 flex items-center space-x-4 bg-blue-100 p-2 rounded-xl shadow-lg">
+    <div className="fixed z-10 top-4 right-6 flex items-center space-x-4 bg-blue-100 p-2 rounded-xl shadow-lg">
       {/* Profil et pseudo */}
       <div
         className="flex items-center space-x-2 cursor-pointer"

@@ -40,8 +40,8 @@ const blocSchema = new mongoose.Schema({
     required: false,
   },
   position: {
-    x: { type: Number, required: false, default: 0 },
-    y: { type: Number, required: false, default: 0 },
+    x: { type: Number, required: true, default: 0 },
+    y: { type: Number, required: true, default: 0 },
   },
   blocs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bloc" }],
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],

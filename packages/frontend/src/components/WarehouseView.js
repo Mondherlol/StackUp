@@ -3,12 +3,14 @@ import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Rect, Image } from "react-konva";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { getBackendImageUrl } from "@/utils/imageUrl";
+import CreateBlockModal from "./CreateBlocModal";
 
 const WarehouseView = ({ warehouse }) => {
   const [blocks, setBlocks] = useState([]);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const stageRef = useRef(null);
+  const [createBlocModalOpen, setCreateBlocModalOpen] = useState(false);
 
   const imageSrc = warehouse.planImage
     ? getBackendImageUrl(warehouse.planImage)
@@ -25,14 +27,14 @@ const WarehouseView = ({ warehouse }) => {
     };
   }, []);
 
-  // Ajouter un bloc
-  const addBlock = () => {
+  const onCreateBlock = (bloc) => {
+    console.log("Creating block with data:", bloc);
     const newBlock = {
       id: Date.now(),
-      x: Math.random() * 300,
-      y: Math.random() * 300,
-      width: 100,
-      height: 100,
+      x: bloc.position.x ? bloc.position.x : Math.random() * 300,
+      y: bloc.position.y ? bloc.position.y : Math.random() * 300,
+      width: bloc.width ? bloc.width : 100,
+      height: bloc.height ? bloc.height : 100,
     };
     setBlocks([...blocks, newBlock]);
   };
@@ -109,10 +111,20 @@ const WarehouseView = ({ warehouse }) => {
         >
           <FaMinus />
         </button>
-        <button className="p-2 bg-gray-100 rounded" onClick={addBlock}>
+        <button
+          className="p-2 bg-gray-100 rounded"
+          onClick={() => setCreateBlocModalOpen(true)}
+        >
           ➕ Add a block
         </button>
       </div>
+
+      <CreateBlockModal
+        isOpen={createBlocModalOpen}
+        onClose={() => setCreateBlocModalOpen(false)}
+        onCreate={onCreateBlock}
+        warehouse={warehouse}
+      />
     </div>
   );
 };
