@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Rect, Image } from "react-konva";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { getBackendImageUrl } from "@/utils/imageUrl";
-import CreateBlockModal from "./CreateBlocModal";
+import CreateBlockModal from "../CreateBlockModal";
 import BlockModal from "./BlockModal";
 import axiosInstance from "@/utils/axiosConfig";
 import toast from "react-hot-toast";
@@ -37,6 +37,7 @@ const WarehouseView = ({ warehouse }) => {
   }, [warehouse]);
 
   const onCreateBlock = (bloc) => {
+    if (bloc.parent) return; // We only add the block if it's a root block
     const newBlock = {
       _id: bloc._id,
       position: bloc.position ? bloc.position : { x: 0, y: 0 },
@@ -99,10 +100,10 @@ const WarehouseView = ({ warehouse }) => {
           setSelectedBlock(null);
 
           break;
-        case "Duplicate":
-          // Handle Duplicate action
-          console.log("Duplicate block:", selectedBlock);
-          setSelectedBlock(null);
+        case "AppendBlock":
+          // Handle append block action
+          console.log("Append block:", selectedBlock);
+          setCreateBlocModalOpen(true);
           break;
         case "Delete":
           // Handle Delete action
@@ -229,6 +230,7 @@ const WarehouseView = ({ warehouse }) => {
           onClose={() => setCreateBlocModalOpen(false)}
           onCreate={onCreateBlock}
           warehouse={warehouse}
+          parent={selectedBlock}
         />
       </div>
       {contextMenu && (
@@ -245,16 +247,17 @@ const WarehouseView = ({ warehouse }) => {
             </li>
             <li
               className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+              onClick={() => handleContextMenuClick("AppendBlock")}
+            >
+              Append block
+            </li>
+            <li
+              className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
               onClick={() => handleContextMenuClick("Edit")}
             >
               Edit
             </li>
-            <li
-              className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-              onClick={() => handleContextMenuClick("Duplicate")}
-            >
-              Duplicate
-            </li>
+
             <li
               className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
               onClick={() => handleContextMenuClick("Delete")}

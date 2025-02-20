@@ -59,9 +59,10 @@ const createBloc = async (req, res) => {
     const savedBloc = await newBloc.save();
 
     // Add the bloc to the warehouse
-    warehouseExists.blocs.push(savedBloc._id);
-    await warehouseExists.save();
-
+    if (!newBloc.parent) {
+      warehouseExists.blocs.push(savedBloc._id);
+      await warehouseExists.save();
+    }
     res
       .status(201)
       .json({ message: "Bloc added with success", bloc: savedBloc });
@@ -95,6 +96,13 @@ const deleteBloc = async (req, res) => {
         await Bloc.deleteOne({ _id: child._id });
       }
     };
+
+    // If have parent, we need to remove the bloc from the parent
+    if (bloc.parent) {
+      const parent = await Bloc.findById(bloc.parent);
+      parent.blocs = parent.blocs.filter((bloc) => bloc.toString() !== blocId);
+      await parent.save();
+    }
 
     await Bloc.deleteOne({ _id: blocId });
     res.status(200).json({ message: "Bloc deleted with success" });

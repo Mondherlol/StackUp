@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/utils/axiosConfig";
-import WarehouseView from "@/components/WarehouseView";
+import WarehouseView from "@/components/WarehouseView/WarehouseView";
 import Button from "@/components/Button";
 
 const WarehousePage = () => {
