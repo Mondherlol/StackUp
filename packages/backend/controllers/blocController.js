@@ -16,6 +16,24 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+const getBloc = async (req, res) => {
+  try {
+    const { blocId } = req.params;
+    const bloc = await Bloc.findById(blocId)
+      .populate("blocs")
+      .populate("addedBy", "username");
+
+    if (!bloc) {
+      return res.status(404).json({ message: "Bloc not found" });
+    }
+
+    res.status(200).json(bloc);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const createBloc = async (req, res) => {
   try {
     const {
@@ -42,7 +60,6 @@ const createBloc = async (req, res) => {
     const newBloc = new Bloc({
       name,
       picture: req.file ? `/uploads/bloc/${req.file.filename}` : null, // Picture path
-      parent,
       height,
       width,
       depth,
@@ -55,8 +72,35 @@ const createBloc = async (req, res) => {
       addedBy: req.user._id,
     });
 
+    if (parent && parent !== null && parent !== "null") {
+      newBloc.parent = parent;
+    }
+
     // Save the bloc
     const savedBloc = await newBloc.save();
+
+    // Add the bloc to the parent
+    if (newBloc.parent) {
+      const parentBloc = await Bloc.findById(newBloc.parent);
+      parentBloc.blocs.push(savedBloc._id);
+
+      // Add the weight of the new bloc to the parent (if defined)
+      if (newBloc.weight) {
+        if (!parentBloc.weight) parentBloc.weight = 0;
+
+        if (
+          parentBloc.maxWeight &&
+          parentBloc.weight + newBloc.weight > parentBloc.maxWeight
+        ) {
+          return res.status(400).json({
+            message: "Parent bloc can't support the weight of the new bloc",
+          });
+        }
+
+        parentBloc.weight += newBloc.weight;
+      }
+      await parentBloc.save();
+    }
 
     // Add the bloc to the warehouse
     if (!newBloc.parent) {
@@ -177,6 +221,7 @@ const moveBloc = async (req, res) => {
 };
 
 module.exports = {
+  getBloc,
   createBloc,
   deleteBloc,
   moveBlocs,

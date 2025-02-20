@@ -38,13 +38,8 @@ const WarehouseView = ({ warehouse }) => {
 
   const onCreateBlock = (bloc) => {
     if (bloc.parent) return; // We only add the block if it's a root block
-    const newBlock = {
-      _id: bloc._id,
-      position: bloc.position ? bloc.position : { x: 0, y: 0 },
-      width: bloc.width ? bloc.width : 100,
-      height: bloc.height ? bloc.height : 100,
-    };
-    setBlocks([...blocks, newBlock]);
+
+    setBlocks([...blocks, bloc]);
   };
 
   const handleZoom = (factor) => {
@@ -269,7 +264,7 @@ const WarehouseView = ({ warehouse }) => {
       )}
 
       <BlockModal
-        block={selectedBlock}
+        blockId={selectedBlock?._id}
         show={showBlockModal}
         onHide={handleCloseModal}
       />
