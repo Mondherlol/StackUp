@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
   const [formData, setFormData] = useState({
     name: "",
-    picture: null,
+    picture: "",
     height: "",
     width: "",
     depth: "",
@@ -14,6 +14,24 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
     warehouse: warehouse._id,
     parent: parent ? parent._id : null,
   });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      picture: "",
+      height: "",
+      width: "",
+      depth: "",
+      weight: "",
+      maxWeight: "",
+      warehouse: warehouse._id,
+      parent: parent ? parent._id : null,
+    });
+  };
+
+  useEffect(() => {
+    resetForm();
+  }, [isOpen]);
 
   useEffect(() => {
     setFormData((prevData) => ({
@@ -74,6 +92,11 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
     e.preventDefault();
 
     try {
+      console.log("Creating block:", formData);
+      if (!formData.width || !formData.height) {
+        toast.error("Please enter all dimensions");
+        return;
+      }
       const formDataToSend = new FormData();
       Object.keys(formData).forEach((key) => {
         formDataToSend.append(key, formData[key]);
@@ -146,6 +169,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
                 placeholder="Height"
                 value={formData.height}
                 onChange={handleChange}
+                required
               />
               {parent && parent.height && (
                 <span className="text-xs text-gray-500">
@@ -161,6 +185,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
                 placeholder="Width"
                 value={formData.width}
                 onChange={handleChange}
+                required
               />
               {parent && parent.width && (
                 <span className="text-xs text-gray-500">
