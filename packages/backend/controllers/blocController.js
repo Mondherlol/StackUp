@@ -20,13 +20,11 @@ const createBloc = async (req, res) => {
   try {
     const {
       name,
-      picture,
       parent,
       height,
       width,
       depth,
       weight,
-      capacity,
       maxWeight,
       blocs,
       tags,
@@ -49,7 +47,6 @@ const createBloc = async (req, res) => {
       width,
       depth,
       weight,
-      capacity,
       maxWeight,
       blocs,
       tags,
@@ -107,8 +104,75 @@ const deleteBloc = async (req, res) => {
   }
 };
 
+const moveBlocs = async (req, res) => {
+  try {
+    const { blocs } = req.body;
+    for (let bloc of blocs) {
+      await Bloc.updateOne({ _id: bloc._id }, { position: bloc.position });
+    }
+    res.status(200).json({ message: "Blocs moved with success" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+const updateBloc = async (req, res) => {
+  try {
+    const { blocId } = req.params;
+    const bloc = await Bloc.findById(blocId);
+    if (!bloc) {
+      return res.status(404).json({ message: "Bloc not found" });
+    }
+    const {
+      name,
+      position,
+      height,
+      width,
+      depth,
+      weight,
+      maxWeight,
+      blocs,
+      customFields,
+    } = req.body;
+    bloc.name = name;
+    bloc.height = height;
+    bloc.width = width;
+    bloc.depth = depth;
+    bloc.position = position;
+    bloc.weight = weight;
+    bloc.maxWeight = maxWeight;
+    bloc.blocs = blocs;
+    bloc.customFields = customFields;
+    await bloc.save();
+    res.status(200).json({ message: "Bloc updated with success" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+const moveBloc = async (req, res) => {
+  try {
+    const { blocId } = req.params;
+    const { position } = req.body;
+    const bloc = await Bloc.findById(blocId);
+    if (!bloc) {
+      return res.status(404).json({ message: "Bloc not found" });
+    }
+    bloc.position = position;
+    await bloc.save();
+    return res.status(200).json({ message: "Bloc moved with success" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 module.exports = {
   createBloc,
   deleteBloc,
+  moveBlocs,
+  moveBloc,
+  updateBloc,
   upload,
 };

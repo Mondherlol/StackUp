@@ -93,6 +93,9 @@ const getWarehouseById = async (req, res) => {
         path: "members.user",
         select: "email username",
       },
+      {
+        path: "blocs",
+      },
     ]);
 
     if (!warehouse) {

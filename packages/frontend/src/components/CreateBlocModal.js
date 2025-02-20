@@ -10,7 +10,6 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse }) => {
     width: "",
     depth: "",
     weight: "",
-    capacity: "",
     maxWeight: "",
     warehouse: warehouse._id,
   });
@@ -124,18 +123,6 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse }) => {
             type="number"
             placeholder="Enter weight"
             value={formData.weight}
-            onChange={handleChange}
-          />
-
-          <label className="block text-sm font-medium text-gray-700">
-            Capacity
-          </label>
-          <input
-            className="w-full p-2 border rounded"
-            name="capacity"
-            type="number"
-            placeholder="Enter capacity"
-            value={formData.capacity}
             onChange={handleChange}
           />
 

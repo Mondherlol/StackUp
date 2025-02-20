@@ -30,11 +30,6 @@ const blocSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
-  // Number of bloc it can contain
-  capacity: {
-    type: Number,
-    required: false,
-  },
   maxWeight: {
     type: Number,
     required: false,
