@@ -4,7 +4,7 @@ import { Stage, Layer, Rect, Image } from "react-konva";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { getBackendImageUrl } from "@/utils/imageUrl";
 import CreateBlockModal from "../CreateBlockModal";
-import BlockModal from "./BlockModal";
+import BlockModal from "./BlockModal/BlockModal";
 import axiosInstance from "@/utils/axiosConfig";
 import toast from "react-hot-toast";
 

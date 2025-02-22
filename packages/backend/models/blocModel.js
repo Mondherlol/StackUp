@@ -55,6 +55,12 @@ const blocSchema = new mongoose.Schema({
     ref: "Warehouse",
     required: true,
   },
+  notes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Note",
+    },
+  ],
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
