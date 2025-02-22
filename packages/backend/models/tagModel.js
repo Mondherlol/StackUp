@@ -10,10 +10,6 @@ const tagSchema = new mongoose.Schema({
     required: false,
     default: "#000000", // Default black color
   },
-  description: {
-    type: String,
-    required: false,
-  },
   warehouse: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Warehouse",
@@ -22,11 +18,6 @@ const tagSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
   },
 });
 

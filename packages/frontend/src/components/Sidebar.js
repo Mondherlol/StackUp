@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { FiMenu, FiX } from "react-icons/fi";
 import { FaCubes, FaWrench, FaBoxOpen, FaCog } from "react-icons/fa";
 import { LuArrowLeftFromLine } from "react-icons/lu";
@@ -7,6 +8,7 @@ import Link from "next/link";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleSwipe = (event) => {
@@ -22,8 +24,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="flex">
-      {/* Bouton stylisé pour ouvrir la sidebar en mobile */}
+    <div className="flex sm:z-10 md:z-0">
       <button
         className="lg:hidden fixed top-4 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
@@ -31,7 +32,6 @@ const Sidebar = () => {
         {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
       </button>
 
-      {/* Sidebar */}
       <div
         className={`fixed lg:relative top-0 left-0 h-full min-h-screen bg-blue-100 p-6 w-64 transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -44,29 +44,30 @@ const Sidebar = () => {
               href="/warehouses"
               icon={<FaCubes />}
               label="Warehouses"
-              active
+              pathname={pathname}
             />
             <NavItem
-              href="/management"
-              icon={<FaWrench />}
-              label="Management"
+              href="/tags-management"
+              icon={<FaBoxOpen />}
+              label="Manage Tags"
+              pathname={pathname}
             />
             <NavItem
               href="/categorize"
-              icon={<FaBoxOpen />}
-              label="Categorize"
+              icon={<FaWrench />}
+              label="Management"
+              pathname={pathname}
             />
             <NavItem
               href="/settings"
               icon={<FaCog />}
               label="System Settings"
+              pathname={pathname}
             />
           </ul>
           <button
             className="absolute bottom-4 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg focus:outline-none xl:hidden"
-            onClick={() => {
-              setIsOpen(false);
-            }}
+            onClick={() => setIsOpen(false)}
           >
             <LuArrowLeftFromLine />
           </button>
@@ -76,14 +77,16 @@ const Sidebar = () => {
   );
 };
 
-const NavItem = ({ icon, label, href, active }) => {
+const NavItem = ({ icon, label, href, pathname }) => {
+  const isActive = pathname === href;
+
   return (
     <li>
       <Link href={href} passHref>
         <div
           className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition duration-200 ease-in-out ${
-            active
-              ? "bg-blue-200 text-blue-700 font-semibold"
+            isActive
+              ? "bg-blue-600 text-white font-semibold"
               : "text-gray-700 hover:bg-blue-200 hover:text-blue-700"
           }`}
         >

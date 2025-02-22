@@ -15,6 +15,11 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
     parent: parent ? parent._id : null,
   });
 
+  const [tags, setTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -27,10 +32,13 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
       warehouse: warehouse._id,
       parent: parent ? parent._id : null,
     });
+    setSelectedTags([]);
+    setSearchQuery("");
   };
 
   useEffect(() => {
     resetForm();
+    fetchTags();
   }, [isOpen]);
 
   useEffect(() => {
@@ -39,8 +47,6 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
       parent: parent ? parent._id : null,
     }));
   }, [parent]);
-
-  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -88,11 +94,49 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
     }));
   };
 
+  const fetchTags = async () => {
+    try {
+      const response = await axiosInstance.get(`/tag/${warehouse._id}`);
+      setTags(response.data);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "An error occurred fetching tags."
+      );
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleTagClick = (tag) => {
+    setSelectedTags((prevSelectedTags) =>
+      prevSelectedTags.includes(tag)
+        ? prevSelectedTags
+        : [...prevSelectedTags, tag]
+    );
+    setSearchQuery("");
+    setTags((prevTags) => prevTags.filter((t) => t !== tag));
+    setIsDropdownOpen(false);
+  };
+
+  const handleRemoveTag = (tag) => {
+    setSelectedTags((prevSelectedTags) =>
+      prevSelectedTags.filter((t) => t !== tag)
+    );
+    setTags((prevTags) => [
+      ...prevTags.filter((t) => !selectedTags.includes(t)).concat(tag),
+    ]);
+  };
+
+  const filteredTags = tags.filter((tag) =>
+    tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      console.log("Creating block:", formData);
       if (!formData.width || !formData.height) {
         toast.error("Please enter all dimensions");
         return;
@@ -101,26 +145,20 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
       Object.keys(formData).forEach((key) => {
         formDataToSend.append(key, formData[key]);
       });
+      selectedTags.forEach((tag) => {
+        formDataToSend.append("tags", tag._id);
+      });
 
       const response = await axiosInstance.post("/bloc", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      console.log(response.data);
-
-      const bloc = response.data.bloc;
-
-      console.log("Bloc : ", bloc);
-
-      toast.success("Block added successfully");
-
       // Pass the created block to the parent component
-      onCreate(bloc);
+      onCreate(response.data.bloc);
       onClose();
+      toast.success("Block added successfully");
     } catch (error) {
-      console.error("Error creating block:", error);
       toast.error("Error creating block.");
     }
   };
@@ -133,7 +171,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
         <h2 className="text-lg font-semibold mb-4">
           {parent ? `Add sub-block to ${parent.name}` : "Create Block"}
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">
             Block Name
           </label>
@@ -241,6 +279,51 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
             onChange={handleChange}
           />
 
+          <label className="block text-sm font-medium text-gray-700">
+            Tags
+          </label>
+          <div className="relative">
+            <input
+              className="w-full p-2 border rounded mb-2"
+              type="text"
+              placeholder="Search for tags"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onFocus={() => setIsDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+            />
+            {isDropdownOpen && (
+              <ul className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                {filteredTags.map((tag) => (
+                  <li
+                    key={tag._id}
+                    onClick={() => handleTagClick(tag)}
+                    className="px-3 py-1 cursor-pointer hover:bg-gray-200"
+                  >
+                    {tag.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {selectedTags.map((tag) => (
+              <div
+                key={tag._id}
+                className="flex items-center px-3 py-1 border rounded text-sm"
+                style={{ backgroundColor: tag.color, color: "#fff" }}
+              >
+                {tag.name}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag)}
+                  className="ml-2 text-white"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
           <div className="flex justify-end space-x-2 mt-4">
             <button
               type="button"

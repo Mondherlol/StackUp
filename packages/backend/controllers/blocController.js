@@ -21,7 +21,8 @@ const getBloc = async (req, res) => {
     const { blocId } = req.params;
     const bloc = await Bloc.findById(blocId)
       .populate("blocs")
-      .populate("addedBy", "username");
+      .populate("addedBy", "username")
+      .populate("tags");
 
     if (!bloc) {
       return res.status(404).json({ message: "Bloc not found" });
@@ -45,7 +46,6 @@ const createBloc = async (req, res) => {
       weight,
       maxWeight,
       blocs,
-      tags,
       customFields,
       warehouse,
     } = req.body;
@@ -55,6 +55,12 @@ const createBloc = async (req, res) => {
     if (!warehouseExists) {
       return res.status(404).json({ message: "Warehouse doesn't exist" });
     }
+
+    console.log("Tags : ", req.body.tags);
+    const tags = Array.isArray(req.body.tags)
+      ? req.body.tags
+      : req.body.tags.split(",");
+    console.log("Tags : ", tags);
 
     // Bloc creation
     const newBloc = new Bloc({

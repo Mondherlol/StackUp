@@ -19,7 +19,7 @@ const BlockInfoTab = ({ block }) => {
           />
         )}
 
-        <div className="grid grid-cols-1 gap-4 bg-gray-100 p-4 rounded-lg shadow">
+        <div className="grid grid-cols-1 gap-4 bg-gray-100 mb-2 p-4 rounded-lg shadow">
           <DetailRow
             icon={FaRulerCombined}
             label="Dimensions"
@@ -37,6 +37,27 @@ const BlockInfoTab = ({ block }) => {
             label="Max Weight"
             value={`${block.maxWeight ?? "N/A"} kg`}
           />
+        </div>
+      </div>
+
+      <div className="flex flex-row gap-2   ">
+        <label className=" justify-center self-center  text-sm font-medium text-gray-700">
+          Tags
+        </label>
+
+        <div className="flex flex-wrap gap-2 ">
+          {block.tags.length === 0 && (
+            <p className="text-gray-500 text-sm">No tags</p>
+          )}
+          {block.tags.map((tag) => (
+            <div
+              key={tag._id}
+              className="flex items-center px-3 py-1 border rounded text-sm"
+              style={{ backgroundColor: tag.color, color: "#fff" }}
+            >
+              {tag.name}
+            </div>
+          ))}
         </div>
       </div>
 

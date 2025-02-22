@@ -49,6 +49,7 @@ app.use("/api/user/", require("./routes/userRoute"));
 app.use("/api/warehouse/", require("./routes/warehouseRoute"));
 app.use("/api/bloc/", require("./routes/blocRoute"));
 app.use("/api/note/", require("./routes/noteRoute"));
+app.use("/api/tag/", require("./routes/tagRoute"));
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
