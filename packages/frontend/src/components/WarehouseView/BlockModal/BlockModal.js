@@ -1,11 +1,10 @@
 "use client";
 import axiosInstance from "@/utils/axiosConfig";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { FaWeight, FaBoxOpen, FaRulerCombined, FaClock } from "react-icons/fa";
+import { FaBoxOpen } from "react-icons/fa";
 import { motion } from "framer-motion";
 import BlockVisualizer from "../BlockVisualizer";
-const { getBackendImageUrl } = require("@/utils/imageUrl");
 
 import ContainedBlocksTab from "./ContainedBlocksTab";
 import BlockInfoTab from "./BlockInfoTab";
@@ -56,7 +55,11 @@ const BlockModal = ({ blockId, show, onHide }) => {
             </button>
           </div>
 
-          <TabsContainer activeTab={activeTab} setActiveTab={setActiveTab} />
+          <TabsContainer
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            block={block}
+          />
           <div className="p-4 overflow-y-scroll h-[70vh]">
             {isLoading ? (
               <div className="flex justify-center items-center py-10">
@@ -84,11 +87,16 @@ const BlockModal = ({ blockId, show, onHide }) => {
   );
 };
 
-const TabsContainer = ({ activeTab, setActiveTab }) => (
+const TabsContainer = ({ activeTab, setActiveTab, block }) => (
   <div className="flex border-b">
     {[
       { id: "info", label: "Infos" },
-      { id: "contained", label: `Contained Blocks (${2})` },
+      {
+        id: "contained",
+        label: `Contained Blocks (${
+          block ? (block.blocs ? block.blocs.length : 0) : 0
+        })`,
+      },
       { id: "visualizer", label: "Visualizer" },
     ].map((tab) => (
       <button

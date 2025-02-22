@@ -1,9 +1,5 @@
 "use client";
-import axiosInstance from "@/utils/axiosConfig";
-import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { FaWeight, FaBoxOpen, FaRulerCombined, FaClock } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { FaWeight, FaRulerCombined, FaClock } from "react-icons/fa";
 import NotesSection from "./NoteSection";
 const { getBackendImageUrl } = require("@/utils/imageUrl");
 
