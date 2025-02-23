@@ -1,5 +1,6 @@
 const Bloc = require("../models/blocModel");
 const Warehouse = require("../models/warehouseModel");
+const mongoose = require("mongoose");
 
 const path = require("path");
 const multer = require("multer");
@@ -55,12 +56,11 @@ const createBloc = async (req, res) => {
     if (!warehouseExists) {
       return res.status(404).json({ message: "Warehouse doesn't exist" });
     }
-
-    console.log("Tags : ", req.body.tags);
-    const tags = Array.isArray(req.body.tags)
-      ? req.body.tags
-      : req.body.tags.split(",");
-    console.log("Tags : ", tags);
+    const tags = req.body.tags
+      ? Array.isArray(req.body.tags)
+        ? req.body.tags
+        : req.body.tags.split(",")
+      : [];
 
     // Bloc creation
     const newBloc = new Bloc({
@@ -178,13 +178,9 @@ const moveBlocs = async (req, res) => {
 const updateBloc = async (req, res) => {
   try {
     const { blocId } = req.params;
-    const bloc = await Bloc.findById(blocId);
-    if (!bloc) {
-      return res.status(404).json({ message: "Bloc not found" });
-    }
     const {
       name,
-      position,
+      parent,
       height,
       width,
       depth,
@@ -192,18 +188,120 @@ const updateBloc = async (req, res) => {
       maxWeight,
       blocs,
       customFields,
+      warehouse,
     } = req.body;
-    bloc.name = name;
-    bloc.height = height;
-    bloc.width = width;
-    bloc.depth = depth;
-    bloc.position = position;
-    bloc.weight = weight;
-    bloc.maxWeight = maxWeight;
-    bloc.blocs = blocs;
-    bloc.customFields = customFields;
-    await bloc.save();
-    res.status(200).json({ message: "Bloc updated with success" });
+
+    // Vérifier si le bloc existe
+    const bloc = await Bloc.findById(blocId);
+    if (!bloc) {
+      return res.status(404).json({ message: "Bloc not found" });
+    }
+
+    // Vérifier si l'entrepôt existe
+    if (warehouse) {
+      const warehouseExists = await Warehouse.findById(warehouse);
+      if (!warehouseExists) {
+        return res.status(404).json({ message: "Warehouse doesn't exist" });
+      }
+    }
+
+    // Gérer les tags
+    const updatedTags = req.body.tags
+      ? Array.isArray(req.body.tags)
+        ? req.body.tags
+            .map((tag) =>
+              mongoose.Types.ObjectId.isValid(tag)
+                ? new mongoose.Types.ObjectId(tag)
+                : null
+            ) // Only convert valid ObjectId strings
+            .filter((tag) => tag !== null) // Remove invalid tags
+        : req.body.tags
+            .split(",")
+            .map((tag) =>
+              mongoose.Types.ObjectId.isValid(tag)
+                ? new mongoose.Types.ObjectId(tag)
+                : null
+            ) // Same for comma-separated string
+            .filter((tag) => tag !== null) // Remove invalid tags
+      : [];
+
+    // Vérifier si l'image est mise à jour
+    const updatedPicture = req.file
+      ? `/uploads/bloc/${req.file.filename}`
+      : bloc.picture;
+
+    // Mise à jour des données
+    const updatedData = {
+      name: name ?? bloc.name,
+      picture: updatedPicture,
+      height: height ?? bloc.height,
+      width: width ?? bloc.width,
+      depth: depth ?? bloc.depth,
+      weight: weight ?? bloc.weight,
+      maxWeight: maxWeight ?? bloc.maxWeight,
+      blocs: blocs ?? bloc.blocs,
+      tags: updatedTags,
+      customFields: customFields ?? bloc.customFields,
+      warehouse: warehouse ?? bloc.warehouse,
+      lastUpdate: Date.now(),
+    };
+
+    // Vérifier si le parent a changé
+    if (parent && parent !== bloc.parent?.toString()) {
+      // Retirer le bloc de l'ancien parent
+      if (bloc.parent) {
+        const oldParent = await Bloc.findById(bloc.parent);
+        if (oldParent) {
+          oldParent.blocs = oldParent.blocs.filter(
+            (id) => id.toString() !== bloc._id.toString()
+          );
+          await oldParent.save();
+        }
+      }
+
+      // Ajouter le bloc au nouveau parent
+      if (parent !== "null") {
+        const newParent = await Bloc.findById(parent);
+        if (newParent) {
+          newParent.blocs.push(bloc._id);
+          await newParent.save();
+          updatedData.parent = parent;
+        }
+      } else {
+        updatedData.parent = null;
+      }
+    }
+
+    // Vérifier si le poids a changé et ajuster le parent
+    if (weight && weight !== bloc.weight) {
+      if (bloc.parent) {
+        const parentBloc = await Bloc.findById(bloc.parent);
+        if (parentBloc) {
+          const weightDifference = weight - (bloc.weight || 0);
+
+          if (
+            parentBloc.maxWeight &&
+            parentBloc.weight + weightDifference > parentBloc.maxWeight
+          ) {
+            return res.status(400).json({
+              message: "Parent bloc can't support the updated weight",
+            });
+          }
+
+          parentBloc.weight += weightDifference;
+          await parentBloc.save();
+        }
+      }
+    }
+
+    // Appliquer les mises à jour
+    const updatedBloc = await Bloc.findByIdAndUpdate(blocId, updatedData, {
+      new: true,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Bloc updated successfully", bloc: updatedBloc });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });

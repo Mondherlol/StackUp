@@ -18,6 +18,11 @@ blocRouter.post("/", authMiddleware, upload.single("picture"), createBloc);
 blocRouter.delete("/:blocId", authMiddleware, checkBlocPermissions, deleteBloc);
 blocRouter.put("/move", authMiddleware, moveBlocs); // Move multiple blocs
 blocRouter.put("/:blocId/move", authMiddleware, checkBlocPermissions, moveBloc); // Move single bloc
-blocRouter.put("/:blocId", authMiddleware, checkBlocPermissions, updateBloc);
+blocRouter.put(
+  "/:blocId",
+  authMiddleware,
+  upload.single("picture"),
+  updateBloc
+);
 
 module.exports = blocRouter;

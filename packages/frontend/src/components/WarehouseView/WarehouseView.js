@@ -7,6 +7,7 @@ import CreateBlockModal from "../CreateBlockModal";
 import BlockModal from "./BlockModal/BlockModal";
 import axiosInstance from "@/utils/axiosConfig";
 import toast from "react-hot-toast";
+import EditBlockModal from "../EditBlockModal";
 
 const WarehouseView = ({ warehouse }) => {
   const [blocks, setBlocks] = useState([]);
@@ -14,6 +15,7 @@ const WarehouseView = ({ warehouse }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const stageRef = useRef(null);
   const [createBlocModalOpen, setCreateBlocModalOpen] = useState(false);
+  const [editBlockModalOpen, setEditBlockModalOpen] = useState(false);
   const imageSrc = warehouse.planImage
     ? getBackendImageUrl(warehouse.planImage)
     : null;
@@ -40,6 +42,13 @@ const WarehouseView = ({ warehouse }) => {
     if (bloc.parent) return; // We only add the block if it's a root block
 
     setBlocks([...blocks, bloc]);
+  };
+
+  const onEditBlock = (bloc) => {
+    const newBlocks = blocks.map((b) =>
+      b._id === bloc._id ? { ...b, ...bloc } : b
+    );
+    setBlocks(newBlocks);
   };
 
   const handleZoom = (factor) => {
@@ -92,8 +101,7 @@ const WarehouseView = ({ warehouse }) => {
         case "Edit":
           // Handle Edit action
           console.log("Edit block:", selectedBlock);
-          setSelectedBlock(null);
-
+          setEditBlockModalOpen(true);
           break;
         case "AppendBlock":
           // Handle append block action
@@ -170,7 +178,7 @@ const WarehouseView = ({ warehouse }) => {
                 x={block.position.x}
                 y={block.position.y}
                 width={block.width}
-                height={block.height}
+                height={block.depth}
                 fill={
                   block === selectedBlock
                     ? "rgba(255, 0, 0, 0.6)"
@@ -227,6 +235,15 @@ const WarehouseView = ({ warehouse }) => {
           warehouse={warehouse}
           parent={selectedBlock}
         />
+
+        {editBlockModalOpen && (
+          <EditBlockModal
+            isOpen={editBlockModalOpen}
+            onClose={() => setEditBlockModalOpen(false)}
+            onEdit={onEditBlock}
+            block={selectedBlock}
+          />
+        )}
       </div>
       {contextMenu && (
         <div

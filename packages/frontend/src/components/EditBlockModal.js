@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axiosConfig";
 import { toast } from "react-hot-toast";
+import { getBackendImageUrl } from "@/utils/imageUrl";
 
-const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
+const EditBlockModal = ({ isOpen, onClose, onEdit, block, parent }) => {
   const [formData, setFormData] = useState({
-    name: "",
-    picture: "",
-    height: "",
-    width: "",
-    depth: "",
-    weight: "",
-    maxWeight: "",
-    warehouse: warehouse._id,
-    parent: parent ? parent._id : null,
+    name: block.name,
+    picture: null,
+    height: block.height,
+    width: block.width,
+    depth: block.depth,
+    weight: block.weight,
+    maxWeight: block.maxWeight,
+    tags: block.tags,
   });
 
   const [tags, setTags] = useState([]);
@@ -20,24 +20,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      picture: "",
-      height: "",
-      width: "",
-      depth: "",
-      weight: "",
-      maxWeight: "",
-      warehouse: warehouse._id,
-      parent: parent ? parent._id : null,
-    });
-    setSelectedTags([]);
-    setSearchQuery("");
-  };
-
   useEffect(() => {
-    resetForm();
     fetchTags();
   }, [isOpen]);
 
@@ -96,9 +79,21 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
 
   const fetchTags = async () => {
     try {
-      const response = await axiosInstance.get(`/tag/${warehouse._id}`);
+      const response = await axiosInstance.get(`/tag/${block.warehouse}`);
       setTags(response.data);
+
+      // Set selected tags
+      const selectedTags = block.tags.map((tagId) =>
+        response.data.find((tag) => tag._id === tagId)
+      );
+      setSelectedTags(selectedTags);
+
+      // Remove selected tags from tags list
+      setTags((prevTags) =>
+        prevTags.filter((tag) => !selectedTags.includes(tag))
+      );
     } catch (error) {
+      console.log("Error fetching tags: ", error);
       toast.error(
         error.response?.data?.message || "An error occurred fetching tags."
       );
@@ -142,29 +137,36 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
         return;
       }
 
-      if (formData.width <= 0 || formData.height <= 0 || formData.depth <= 0) {
-        toast.error("Dimensions must be greater than 0");
-        return;
-      }
       const formDataToSend = new FormData();
+
       Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, formData[key]);
+        // Vérifie si la valeur est null ou undefined avant de l'ajouter
+        if (formData[key] !== null && formData[key] !== undefined) {
+          formDataToSend.append(key, formData[key]);
+        }
       });
+
       selectedTags.forEach((tag) => {
         formDataToSend.append("tags", tag._id);
       });
 
-      const response = await axiosInstance.post("/bloc", formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      // Pass the created block to the parent component
-      onCreate(response.data.bloc);
+      const response = await axiosInstance.put(
+        `/bloc/${block._id}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Updated block:", response.data.bloc);
+      onEdit(response.data.bloc);
       onClose();
-      toast.success("Block added successfully");
+      toast.success("Block updated successfully");
     } catch (error) {
-      toast.error("Error creating block.");
+      console.error("Error updating block:", error);
+      toast.error("Error updating block.");
     }
   };
 
@@ -173,9 +175,6 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
       <div className="bg-white p-6 rounded-lg shadow-xl w-[400px]">
-        <h2 className="text-lg font-semibold mb-4">
-          {parent ? `Add sub-block to ${parent.name}` : "Create Block"}
-        </h2>
         <form onSubmit={handleSubmit} className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">
             Block Name
@@ -192,59 +191,88 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
           <label className="block text-sm font-medium text-gray-700">
             Image
           </label>
-          <input
-            className="w-full p-2 border rounded"
-            type="file"
-            name="picture"
-            accept="image/*"
-            onChange={handleChange}
-          />
+          <div className="flex items-center space-x-2 mb-2">
+            {(formData.picture || block.picture) && (
+              <img
+                src={
+                  formData.picture
+                    ? URL.createObjectURL(formData.picture)
+                    : getBackendImageUrl(block.picture)
+                }
+                alt="Block"
+                className="w-full h-40 object-cover mb-2"
+              />
+            )}
+
+            <input
+              className="w-full p-2 border rounded"
+              type="file"
+              name="picture"
+              accept="image/*"
+              onChange={handleChange}
+            />
+          </div>
 
           <label className="block text-sm font-medium text-gray-700">
             Dimensions (cm)
           </label>
           <div className="flex space-x-2">
             <div className="w-1/3">
-              <input
-                className="w-full p-2 border rounded"
-                name="height"
-                type="number"
-                placeholder="Height"
-                value={formData.height}
-                onChange={handleChange}
-                required
-              />
-              {parent && parent.height && (
-                <span className="text-xs text-gray-500">
-                  Max: {parent.height} cm
-                </span>
-              )}
+              <div className="flex-col items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Height
+                </label>
+                <input
+                  className="w-full p-2 border rounded"
+                  name="height"
+                  type="number"
+                  placeholder="Height"
+                  value={formData.height}
+                  onChange={handleChange}
+                  required
+                />
+                {parent && parent.height && (
+                  <span className="text-xs text-gray-500">
+                    Max: {parent.height} cm
+                  </span>
+                )}
+              </div>
             </div>
             <div className="w-1/3">
-              <input
-                className="w-full p-2 border rounded"
-                name="width"
-                type="number"
-                placeholder="Width"
-                value={formData.width}
-                onChange={handleChange}
-                required
-              />
-              {parent && parent.width && (
-                <span className="text-xs text-gray-500">
-                  Max: {parent.width} cm
-                </span>
-              )}
+              <div className="flex-col items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Width
+                </label>
+                <input
+                  className="w-full p-2 border rounded"
+                  name="width"
+                  type="number"
+                  placeholder="Width"
+                  value={formData.width}
+                  onChange={handleChange}
+                  required
+                />
+                {parent && parent.width && (
+                  <span className="text-xs text-gray-500">
+                    Max: {parent.width} cm
+                  </span>
+                )}
+              </div>
             </div>
             <div className="w-1/3">
-              <input
-                className="w-full p-2 border rounded"
-                name="depth"
-                type="number"
-                placeholder="Depth"
-                value={formData.depth}
-                onChange={handleChange}
-              />
+              <div className="flex-col items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Depth
+                </label>
+                <input
+                  className="w-full p-2 border rounded"
+                  name="depth"
+                  type="number"
+                  placeholder="Depth"
+                  value={formData.depth}
+                  onChange={handleChange}
+                />
+              </div>
               {parent && parent.depth && (
                 <span className="text-xs text-gray-500">
                   Max: {parent.depth} cm
@@ -341,7 +369,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded"
             >
-              Create
+              Update
             </button>
           </div>
         </form>
@@ -350,4 +378,4 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
   );
 };
 
-export default CreateBlockModal;
+export default EditBlockModal;

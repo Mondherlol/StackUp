@@ -14,6 +14,7 @@
     "@heroicons/react": "^2.2.0",
     "axios": "^1.7.9",
     "canvas": "^3.1.0",
+    "d3": "^7.9.0",
     "flowbite-react": "^0.10.2",
     "framer-motion": "^12.4.3",
     "konva": "^9.3.18",
@@ -25,6 +26,7 @@
     "react-hot-toast": "^2.5.1",
     "react-konva": "^19.0.2",
     "react-zoom-pan-pinch": "^3.7.0",
+    "recharts": "^2.15.1",
     "use-image": "^1.1.1"
   },
   "devDependencies": {

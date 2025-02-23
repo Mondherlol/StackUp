@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaBoxOpen } from "react-icons/fa";
 import { motion } from "framer-motion";
-import BlockVisualizer from "../BlockVisualizer";
+import BlockVisualizer from "../../BlockVisualizer/BlockVisualizer";
 
 import ContainedBlocksTab from "./ContainedBlocksTab";
 import BlockInfoTab from "./BlockInfoTab";
