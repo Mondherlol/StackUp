@@ -8,6 +8,7 @@ import BlockModal from "./BlockModal/BlockModal";
 import axiosInstance from "@/utils/axiosConfig";
 import toast from "react-hot-toast";
 import EditBlockModal from "../EditBlockModal";
+import BlockLayer from "./BlockLayer";
 
 const WarehouseView = ({ warehouse }) => {
   const [blocks, setBlocks] = useState([]);
@@ -162,51 +163,14 @@ const WarehouseView = ({ warehouse }) => {
             handleZoom(e.evt.deltaY > 0 ? 0.9 : 1.1);
           }}
         >
-          <Layer>
-            {backgroundImage && (
-              <Image
-                image={backgroundImage}
-                x={0}
-                y={0}
-                width={1200}
-                height={720}
-              />
-            )}
-            {blocks.map((block) => (
-              <Rect
-                key={block._id}
-                x={block.position.x}
-                y={block.position.y}
-                width={block.width}
-                height={block.depth}
-                fill={
-                  block === selectedBlock
-                    ? "rgba(255, 0, 0, 0.6)"
-                    : "rgba(0, 123, 255, 0.6)"
-                }
-                draggable
-                onDragEnd={(e) => {
-                  const newBlocks = blocks.map((b) =>
-                    b._id === block._id
-                      ? {
-                          ...b,
-                          position: {
-                            x: e.target.x(),
-                            y: e.target.y(),
-                          },
-                        }
-                      : b
-                  );
-                  setBlocks(newBlocks);
-                  updateBlockPosition(block._id, {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                  });
-                }}
-                onContextMenu={(e) => handleContextMenu(e, block)}
-              />
-            ))}
-          </Layer>
+          <BlockLayer
+            blocks={blocks}
+            backgroundImage={backgroundImage}
+            selectedBlock={selectedBlock}
+            setBlocks={setBlocks}
+            updateBlockPosition={updateBlockPosition}
+            handleContextMenu={handleContextMenu}
+          />
         </Stage>
         <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 bg-white p-2 rounded-lg shadow-md flex space-x-3">
           <button
@@ -232,7 +196,7 @@ const WarehouseView = ({ warehouse }) => {
           isOpen={createBlocModalOpen}
           onClose={() => setCreateBlocModalOpen(false)}
           onCreate={onCreateBlock}
-          warehouse={warehouse}
+          warehouseId={warehouse._id}
           parent={selectedBlock}
         />
 

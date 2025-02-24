@@ -17,22 +17,29 @@ const BlockModal = ({ blockId, show, onHide }) => {
   const [activeTab, setActiveTab] = useState("info");
 
   useEffect(() => {
-    const fetchBlock = async () => {
-      try {
-        const response = await axiosInstance.get(`/bloc/${blockId}`);
-        if (response.status === 200) {
-          setBlock(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching block:", error);
-        toast.error("Error fetching block.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     setIsLoading(true);
     fetchBlock();
   }, [blockId]);
+
+  useEffect(() => {
+    if (!block) return;
+    setIsLoading(true);
+    fetchBlock();
+  }, [activeTab]);
+
+  const fetchBlock = async () => {
+    try {
+      const response = await axiosInstance.get(`/bloc/${blockId}`);
+      if (response.status === 200) {
+        setBlock(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching block:", error);
+      toast.error("Error fetching block.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -71,9 +78,14 @@ const BlockModal = ({ blockId, show, onHide }) => {
                 {activeTab === "contained" && (
                   <ContainedBlocksTab block={block} />
                 )}
-                {activeTab === "visualizer" && (
-                  <BlockVisualizer initialBlockId={blockId} />
-                )}
+                {activeTab === "visualizer" &&
+                  (block.blocs?.length > 0 ? (
+                    <BlockVisualizer rootBlockId={blockId} />
+                  ) : (
+                    <div className="text-center py-10 text-gray-500 text-xl font-semibold">
+                      <p>This block is empty.</p>
+                    </div>
+                  ))}
               </>
             ) : (
               <div className="text-center py-10 text-gray-500 text-xl font-semibold">

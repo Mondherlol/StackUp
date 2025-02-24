@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axiosConfig";
 import { toast } from "react-hot-toast";
 
-const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
+const CreateBlockModal = ({
+  isOpen,
+  onClose,
+  onCreate,
+  warehouseId,
+  parent,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
     picture: "",
@@ -11,7 +17,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
     depth: "",
     weight: "",
     maxWeight: "",
-    warehouse: warehouse._id,
+    warehouse: warehouseId,
     parent: parent ? parent._id : null,
   });
 
@@ -29,7 +35,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
       depth: "",
       weight: "",
       maxWeight: "",
-      warehouse: warehouse._id,
+      warehouse: warehouseId,
       parent: parent ? parent._id : null,
     });
     setSelectedTags([]);
@@ -38,8 +44,11 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
 
   useEffect(() => {
     resetForm();
-    fetchTags();
   }, [isOpen]);
+
+  useEffect(() => {
+    fetchTags();
+  }, [warehouseId]);
 
   useEffect(() => {
     setFormData((prevData) => ({
@@ -96,7 +105,7 @@ const CreateBlockModal = ({ isOpen, onClose, onCreate, warehouse, parent }) => {
 
   const fetchTags = async () => {
     try {
-      const response = await axiosInstance.get(`/tag/${warehouse._id}`);
+      const response = await axiosInstance.get(`/tag/${warehouseId}`);
       setTags(response.data);
     } catch (error) {
       toast.error(

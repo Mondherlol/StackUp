@@ -21,7 +21,10 @@ const getBloc = async (req, res) => {
   try {
     const { blocId } = req.params;
     const bloc = await Bloc.findById(blocId)
-      .populate("blocs")
+      .populate({
+        path: "blocs",
+        populate: { path: "tags" },
+      })
       .populate("addedBy", "username")
       .populate("tags");
 
