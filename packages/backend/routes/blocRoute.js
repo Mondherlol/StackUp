@@ -8,6 +8,7 @@ const {
   moveBlocs,
   moveBloc,
   updateBloc,
+  changeParent,
   upload,
 } = require("../controllers/blocController");
 
@@ -24,5 +25,5 @@ blocRouter.put(
   upload.single("picture"),
   updateBloc
 );
-
+blocRouter.put("/:blocId/parent/:newParentId", authMiddleware, changeParent);
 module.exports = blocRouter;

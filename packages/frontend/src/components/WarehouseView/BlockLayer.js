@@ -47,10 +47,20 @@ const BlockLayer = ({
               width={block.width}
               height={block.depth}
               fill={
-                block === selectedBlock
-                  ? "rgba(255, 0, 0, 0.6)"
+                block.isCut
+                  ? "rgba(255, 0, 0, 0.3)"
+                  : block === selectedBlock
+                  ? "rgba(0, 134, 255, 0.8)"
                   : "rgba(0, 123, 255, 0.6)"
               }
+              stroke={
+                block === selectedBlock
+                  ? "yellow"
+                  : block.isCut
+                  ? "rgba(255, 0, 0, 0.4)"
+                  : ""
+              }
+              strokeWidth={block === selectedBlock ? 4 : block.isCut ? 1 : 0}
             />
             <Text
               width={block.width}

@@ -24,6 +24,7 @@ const WarehouseView = ({ warehouse }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [copiedBlock, setCopiedBlock] = useState(null);
 
   useEffect(() => {
     if (!imageSrc) return;
@@ -93,26 +94,33 @@ const WarehouseView = ({ warehouse }) => {
 
   const handleContextMenuClick = (action) => {
     if (selectedBlock) {
+      setBlocks(blocks.map((b) => ({ ...b, isCut: false }))); // Reset "cut" state
+      setCopiedBlock(null);
       switch (action) {
         case "View":
-          // Handle View action
-          console.log("View block:", selectedBlock);
           handleViewBlock(selectedBlock);
           break;
+        case "Cut":
+          setCopiedBlock(selectedBlock);
+          setBlocks(
+            blocks.map((b) =>
+              b._id === selectedBlock._id
+                ? { ...b, isCut: true }
+                : { ...b, isCut: false }
+            )
+          );
+          break;
+        case "Paste":
+          handleSetParent(copiedBlock._id, selectedBlock._id);
+          break;
         case "Edit":
-          // Handle Edit action
-          console.log("Edit block:", selectedBlock);
           setEditBlockModalOpen(true);
           break;
         case "AppendBlock":
-          // Handle append block action
-          console.log("Append block:", selectedBlock);
           setCreateBlocModalOpen(true);
           break;
         case "Delete":
-          // Handle Delete action
           deleteBlock(selectedBlock._id);
-          setSelectedBlock(null);
           break;
         default:
           break;
@@ -129,6 +137,21 @@ const WarehouseView = ({ warehouse }) => {
     } catch (error) {
       toast.error("An error occurred while deleting the block.");
       console.error("Error deleting block:", error);
+    }
+  };
+
+  const handleSetParent = async (blockId, parentId) => {
+    try {
+      await axiosInstance.put(`/bloc/${blockId}/parent/${parentId}`);
+      const newBlocks = blocks.map((b) =>
+        b._id === blockId ? { ...b, parent: parentId } : b
+      );
+      setBlocks(newBlocks);
+      setCopiedBlock(null);
+      toast.success("Block moved successfully");
+    } catch (error) {
+      toast.error("An error occurred while moving the block.");
+      console.error("Error moving block:", error);
     }
   };
 
@@ -221,6 +244,20 @@ const WarehouseView = ({ warehouse }) => {
             >
               View
             </li>
+            <li
+              className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+              onClick={() => handleContextMenuClick("Cut")}
+            >
+              Cut
+            </li>
+            {copiedBlock && selectedBlock._id != copiedBlock._id && (
+              <li
+                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                onClick={() => handleContextMenuClick("Paste")}
+              >
+                Paste
+              </li>
+            )}
             <li
               className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
               onClick={() => handleContextMenuClick("AppendBlock")}

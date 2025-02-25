@@ -5,6 +5,7 @@ import axiosInstance from "@/utils/axiosConfig";
 import WarehouseView from "@/components/WarehouseView/WarehouseView";
 import BlockVisualizerModal from "@/components/BlockVisualizer/BlockVisualizerModal";
 import { Search, Eye } from "lucide-react";
+import SearchModal from "@/components/SearchModal";
 
 const WarehousePage = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const WarehousePage = () => {
   const [isBlockVizualisationModalOpen, setIsBlockVizualisationModalOpen] =
     useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchWarehouse = async () => {
@@ -43,13 +45,20 @@ const WarehousePage = () => {
         {/* Barre de recherche */}
         <div className="  relative  w-full max-w-md  ">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-full bg-white shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsSearchModalOpen(true);
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-white shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </form>
         </div>
       </div>
 
@@ -69,6 +78,13 @@ const WarehousePage = () => {
           onClose={() => setIsBlockVizualisationModalOpen(false)}
         />
       )}
+
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        query={searchQuery}
+        setQuery={setSearchQuery}
+      />
     </div>
   );
 };
