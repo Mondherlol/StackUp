@@ -6,6 +6,7 @@ import WarehouseView from "@/components/WarehouseView/WarehouseView";
 import BlockVisualizerModal from "@/components/BlockVisualizer/BlockVisualizerModal";
 import { Search, Eye } from "lucide-react";
 import SearchModal from "@/components/SearchModal";
+import BlockModal from "@/components/WarehouseView/BlockModal/BlockModal";
 
 const WarehousePage = () => {
   const { id } = useParams();
@@ -16,6 +17,8 @@ const WarehousePage = () => {
     useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState(null);
 
   useEffect(() => {
     const fetchWarehouse = async () => {
@@ -84,6 +87,17 @@ const WarehousePage = () => {
         onClose={() => setIsSearchModalOpen(false)}
         query={searchQuery}
         setQuery={setSearchQuery}
+        onClick={(bloc) => {
+          setIsSearchModalOpen(false);
+          setIsBlockModalOpen(true);
+          setSelectedBlock(bloc);
+        }}
+      />
+
+      <BlockModal
+        show={isBlockModalOpen}
+        onHide={() => setIsBlockModalOpen(false)}
+        blockId={selectedBlock?._id}
       />
     </div>
   );

@@ -373,6 +373,39 @@ const changeParent = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+const searchBloc = async (req, res) => {
+  try {
+    const { warehouseId } = req.params;
+    const { query, tags, sortBy } = req.query;
+    const filter = {
+      name: { $regex: query, $options: "i" },
+    };
+
+    if (tags) {
+      filter.tags = { $in: tags.split(",") };
+    }
+
+    const sortOptions = {};
+    if (sortBy) {
+      const sortFields = sortBy.split(",");
+      sortFields.forEach((field) => {
+        const [key, order] = field.split(":");
+        sortOptions[key] = order === "desc" ? -1 : 1;
+      });
+    }
+
+    const blocs = await Bloc.find(filter)
+      .populate("tags")
+      .populate("parent")
+      .sort(sortOptions);
+
+    res.status(200).json(blocs);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
 module.exports = {
   getBloc,
   createBloc,
@@ -381,5 +414,6 @@ module.exports = {
   moveBloc,
   updateBloc,
   changeParent,
+  searchBloc,
   upload,
 };

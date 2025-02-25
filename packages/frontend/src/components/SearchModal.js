@@ -1,55 +1,58 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { X, Search, Filter, ArrowUpDown } from "lucide-react";
+import axiosInstance from "@/utils/axiosConfig";
 
-const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
+const SearchModal = ({
+  isOpen,
+  onClose,
+  warehouseId,
+  query,
+  setQuery,
+  onClick,
+}) => {
   const [results, setResults] = useState([]);
   const [filters, setFilters] = useState([]);
   const [sortBy, setSortBy] = useState("name");
+  const [loading, setLoading] = useState(false);
+  const [uniqueTags, setUniqueTags] = useState([]);
 
   // Fake API Call
   useEffect(() => {
     if (!isOpen) return;
-
-    // Simule une recherche avec des blocs factices
-    const fakeResults = [
-      {
-        id: 1,
-        name: "Bloc A",
-        height: 10,
-        width: 20,
-        weight: 5,
-        tags: ["Stock", "Fragile"],
-        createdAt: "2024-02-15",
-      },
-      {
-        id: 2,
-        name: "Bloc B",
-        height: 15,
-        width: 25,
-        weight: 8,
-        tags: ["Lourd"],
-        createdAt: "2024-02-12",
-      },
-      {
-        id: 3,
-        name: "Bloc C",
-        height: 8,
-        width: 18,
-        weight: 3,
-        tags: ["Stock"],
-        createdAt: "2024-02-18",
-      },
-    ];
-
-    setResults(fakeResults);
+    // Request for search
+    handleSearch();
+    // setResults(fakeResults);
   }, [isOpen]);
+
+  const handleSearch = async () => {
+    try {
+      console.log("SEARCHING BLOCS");
+      const response = await axiosInstance.get(
+        `/bloc/search/${warehouseId}?query=${query}`
+      );
+      console.log(response.data);
+      setResults(response.data);
+
+      // Extract unique tags from results
+      const tags = response.data.flatMap((bloc) =>
+        bloc.tags.map((tag) => tag.name)
+      );
+      const uniqueTags = [...new Set(tags)];
+      setUniqueTags(uniqueTags);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filtrage & Tri
   const filteredResults = results
     .filter(
       (bloc) =>
-        filters.length === 0 || filters.some((f) => bloc.tags.includes(f))
+        filters.length === 0 ||
+        filters.some((f) => bloc.tags.map((tag) => tag.name).includes(f))
     )
     .sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
@@ -58,6 +61,14 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
+  const toggleFilter = (tag) => {
+    setFilters((prevFilters) =>
+      prevFilters.includes(tag)
+        ? prevFilters.filter((f) => f !== tag)
+        : [...prevFilters, tag]
+    );
+  };
+
   return isOpen ? (
     <div className="fixed inset-0 flex items-center  flex-col justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="  relative  w-full max-w-md  mb-4">
@@ -65,6 +76,7 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            handleSearch();
           }}
         >
           <input
@@ -76,6 +88,22 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
           />
         </form>
       </div>
+
+      {uniqueTags && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {uniqueTags.map((tag) => (
+            <button
+              key={tag}
+              className={`px-3 py-1.5 text-sm rounded-full ${
+                filters.includes(tag) ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+              onClick={() => toggleFilter(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="bg-white w-[90%] max-w-lg p-6 rounded-2xl shadow-xl relative">
         <button
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -83,7 +111,7 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
         >
           <X size={20} />
         </button>
-        <h2 className="text-lg font-semibold mb-4">Résultats pour "{query}"</h2>
+        <h2 className="text-lg font-semibold mb-4">Results for "{query}"</h2>
 
         {/* Filtres */}
         <div className="flex gap-2 mb-4">
@@ -91,13 +119,13 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full text-sm"
             onClick={() => setSortBy("name")}
           >
-            <ArrowUpDown size={16} /> Nom
+            <ArrowUpDown size={16} /> Name
           </button>
           <button
             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full text-sm"
             onClick={() => setSortBy("weight")}
           >
-            <ArrowUpDown size={16} /> Poids
+            <ArrowUpDown size={16} /> Weight
           </button>
           <button
             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-full text-sm"
@@ -108,20 +136,20 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
         </div>
 
         {/* Résultats */}
-        <div className="max-h-80 overflow-y-auto space-y-3">
+        <div className="max-h-80  overflow-y-auto space-y-3">
           {filteredResults.length > 0 ? (
             filteredResults.map((bloc) => (
               <div
-                key={bloc.id}
+                key={bloc._id}
                 className="p-3 bg-gray-50 rounded-lg shadow flex justify-between items-center"
               >
                 <div>
                   <h3 className="font-semibold">{bloc.name}</h3>
                   <p className="text-sm text-gray-500">
-                    Poids: {bloc.weight}kg
+                    {bloc.blocs.length ? `${bloc.blocs.length} blocs` : "Empty"}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Taille: {bloc.height}x{bloc.width}
+                    {bloc.parent ? `Inside: ${bloc.parent.name}` : ""}
                   </p>
                 </div>
                 <div className="flex gap-1">
@@ -130,10 +158,11 @@ const SearchModal = ({ isOpen, onClose, query, setQuery }) => {
                       key={index}
                       className="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full"
                     >
-                      {tag}
+                      {tag.name}
                     </span>
                   ))}
                 </div>
+                <button onClick={() => onClick(bloc)}>View</button>
               </div>
             ))
           ) : (
