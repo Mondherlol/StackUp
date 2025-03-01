@@ -394,6 +394,68 @@ const changeParent = async (req, res) => {
   }
 };
 
+const changeParentsBatch = async (req, res) => {
+  try {
+    const { newParentId } = req.body;
+    const { blocIds } = req.body;
+
+    if (!blocIds) {
+      return res.status(400).json({ message: "blocIds is required" });
+    }
+
+    for (let blocId of blocIds) {
+      const bloc = await Bloc.findById(blocId);
+      if (!bloc) {
+        continue;
+      }
+
+      // Remove bloc from old parent
+      if (bloc.parent) {
+        const oldParent = await Bloc.findById(bloc.parent);
+        if (oldParent) {
+          oldParent.blocs = oldParent.blocs.filter(
+            (id) => id.toString() !== bloc._id.toString()
+          );
+          await oldParent.save();
+        }
+      } else {
+        // If it doesn't have a parent then remove from warehouse root blocs
+        const warehouse = await Warehouse.findById(bloc.warehouse);
+        if (warehouse) {
+          warehouse.blocs = warehouse.blocs.filter(
+            (id) => id.toString() !== bloc._id.toString()
+          );
+          await warehouse.save();
+        }
+      }
+
+      // Add bloc to new parent
+      if (newParentId) {
+        const newParent = await Bloc.findById(newParentId);
+        if (newParent) {
+          newParent.blocs.push(bloc._id);
+          await newParent.save();
+        }
+      } else {
+        // Add bloc to warehouse root if no new parent
+        const warehouse = await Warehouse.findById(bloc.warehouse);
+        if (warehouse) {
+          warehouse.blocs.push(bloc._id);
+          await warehouse.save();
+        }
+      }
+
+      bloc.parent = newParentId || null;
+      await bloc.save();
+    }
+
+    return res.status(200).json({ message: "Parents changed with success" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const searchBloc = async (req, res) => {
   try {
     const { warehouseId } = req.params;
@@ -435,5 +497,6 @@ module.exports = {
   updateBloc,
   changeParent,
   searchBloc,
+  changeParentsBatch,
   upload,
 };

@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import CreateBlockModal from "@/components/CreateBlockModal";
 import BlockModal from "./BlockModal";
 import EditBlockModal from "@/components/EditBlockModal";
+import toast from "react-hot-toast";
+import axiosInstance from "@/utils/axiosConfig";
 const { getBackendImageUrl } = require("@/utils/imageUrl");
 
 const ContainedBlocksTab = ({ block, onEdit }) => {
@@ -11,6 +13,19 @@ const ContainedBlocksTab = ({ block, onEdit }) => {
   const [isCreateBlockModalOpen, setIsCreateBlockModalOpen] = useState(false);
   const [isEditBlockModalOpen, setIsEditBlockModalOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this block?")) {
+      try {
+        await axiosInstance.delete(`/bloc/${id}`);
+        toast.success("Block deleted successfully");
+        onEdit();
+      } catch (error) {
+        toast.error("An error occurred while deleting the block.");
+        console.error("Error deleting block:", error);
+      }
+    }
+  };
 
   return (
     <div>
@@ -47,6 +62,7 @@ const ContainedBlocksTab = ({ block, onEdit }) => {
                 setSelectedBlock(block);
                 setIsEditBlockModalOpen(true);
               }}
+              handleDeleteBlock={handleDelete}
             />
           ))}
       </div>
@@ -55,8 +71,8 @@ const ContainedBlocksTab = ({ block, onEdit }) => {
         <CreateBlockModal
           isOpen={isCreateBlockModalOpen}
           onClose={() => setIsCreateBlockModalOpen(false)}
-          onCreate={(bloc) => {
-            block.blocs.push(bloc);
+          onCreate={(blocs) => {
+            block.blocs.push(...blocs);
           }}
           warehouseId={block.warehouse}
           parent={block}
@@ -79,7 +95,7 @@ const ContainedBlocksTab = ({ block, onEdit }) => {
   );
 };
 
-const BlockCard = ({ block, handleEditBlock }) => {
+const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -107,10 +123,6 @@ const BlockCard = ({ block, handleEditBlock }) => {
     console.log("Edit Block", block);
     setIsMenuOpen(false);
     handleEditBlock(block);
-  };
-
-  const handleDelete = () => {
-    console.log("Delete Block", block);
   };
 
   return (
@@ -176,7 +188,10 @@ const BlockCard = ({ block, handleEditBlock }) => {
                 Edit Block
               </button>
               <button
-                onClick={handleDelete}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  await handleDeleteBlock(block._id);
+                }}
                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
               >
                 Delete Block

@@ -10,6 +10,7 @@ const {
   moveBloc,
   updateBloc,
   changeParent,
+  changeParentsBatch,
   upload,
 } = require("../controllers/blocController");
 
@@ -28,5 +29,6 @@ blocRouter.put(
   updateBloc
 );
 blocRouter.put("/:blocId/parent/:newParentId", authMiddleware, changeParent);
+blocRouter.put("/batch/parent", authMiddleware, changeParentsBatch);
 
 module.exports = blocRouter;

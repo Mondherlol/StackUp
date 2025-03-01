@@ -4,9 +4,13 @@ import { useParams } from "next/navigation";
 import axiosInstance from "@/utils/axiosConfig";
 import WarehouseView from "@/components/WarehouseView/WarehouseView";
 import BlockVisualizerModal from "@/components/BlockVisualizer/BlockVisualizerModal";
-import { Search, Eye } from "lucide-react";
+import { Search } from "lucide-react";
+import { TbChartTreemap } from "react-icons/tb";
+import { MdEdit } from "react-icons/md";
+
 import SearchModal from "@/components/SearchModal";
 import BlockModal from "@/components/WarehouseView/BlockModal/BlockModal";
+import BatchActionModal from "@/components/BatchActions/BatchActionModal";
 
 const WarehousePage = () => {
   const { id } = useParams();
@@ -19,20 +23,21 @@ const WarehousePage = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
+  const [isBatchActionModalOpen, setIsBatchActionModalOpen] = useState(false);
+
+  const fetchWarehouse = async () => {
+    try {
+      const response = await axiosInstance.get(`/warehouse/${id}`);
+      setWarehouse(response.data.warehouse);
+      console.log("Warehouse :", response.data.warehouse);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWarehouse = async () => {
-      try {
-        const response = await axiosInstance.get(`/warehouse/${id}`);
-        setWarehouse(response.data.warehouse);
-        console.log("Warehouse :", response.data.warehouse);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWarehouse();
   }, [id]);
 
@@ -68,13 +73,23 @@ const WarehousePage = () => {
 
       <WarehouseView warehouse={warehouse} />
 
-      {/* Bouton flottant pour la visualisation des blocs */}
-      <button
-        onClick={() => setIsBlockVizualisationModalOpen(true)}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
-      >
-        <Eye size={24} />
-      </button>
+      <div className="flex justify-end flex-col gap-2 mt-4 fixed bottom-6 right-6">
+        {/*  Bouton flottant pour les actions en lot */}
+        <button
+          onClick={() => setIsBatchActionModalOpen(true)}
+          className=" bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+        >
+          <MdEdit size={24} />
+        </button>
+
+        {/* Bouton flottant pour la visualisation des blocs */}
+        <button
+          onClick={() => setIsBlockVizualisationModalOpen(true)}
+          className=" bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+        >
+          <TbChartTreemap size={24} />
+        </button>
+      </div>
 
       {isBlockVizualisationModalOpen && (
         <BlockVisualizerModal
@@ -93,6 +108,15 @@ const WarehousePage = () => {
           setIsBlockModalOpen(true);
           setSelectedBlock(bloc);
         }}
+      />
+
+      <BatchActionModal
+        isOpen={isBatchActionModalOpen}
+        onClose={() => {
+          setIsBatchActionModalOpen(false);
+        }}
+        fetchWarehouse={fetchWarehouse}
+        warehouseId={id}
       />
 
       <BlockModal

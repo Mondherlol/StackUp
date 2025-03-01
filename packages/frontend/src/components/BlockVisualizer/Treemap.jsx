@@ -20,8 +20,13 @@ const Treemap = ({
   rootColor,
   distributionMode,
 }) => {
+  // const hierarchy = useMemo(
+  //   () => d3.hierarchy(data).sum((d) => d.value),
+  //   [data]
+  // );
+
   const hierarchy = useMemo(
-    () => d3.hierarchy(data).sum((d) => d.value),
+    () => d3.hierarchy(data).sum((d) => Math.log1p(d.value)), // Log pour éviter les gros écarts
     [data]
   );
 
@@ -32,7 +37,11 @@ const Treemap = ({
     .range(colors);
 
   const root = useMemo(
-    () => d3.treemap().size([width, height]).padding(6)(hierarchy),
+    () =>
+      d3.treemap().size([width, height]).padding(6).round(true)(
+        // Ajout pour éviter des valeurs trop petites
+        hierarchy
+      ),
     [hierarchy, width, height]
   );
 
