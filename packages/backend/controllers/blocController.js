@@ -52,6 +52,8 @@ const createBloc = async (req, res) => {
       blocs,
       customFields,
       warehouse,
+      sameNameForAll,
+      nbBlocks,
     } = req.body;
 
     // Check if warehouse exists
@@ -59,69 +61,87 @@ const createBloc = async (req, res) => {
     if (!warehouseExists) {
       return res.status(404).json({ message: "Warehouse doesn't exist" });
     }
+
     const tags = req.body.tags
       ? Array.isArray(req.body.tags)
         ? req.body.tags
         : req.body.tags.split(",")
       : [];
 
-    // Bloc creation
-    const newBloc = new Bloc({
-      name,
-      picture: req.file ? `/uploads/bloc/${req.file.filename}` : null, // Picture path
-      height,
-      width,
-      depth,
-      weight,
-      maxWeight,
-      blocs,
-      tags,
-      customFields,
-      warehouse,
-      addedBy: req.user._id,
-    });
+    const createdBlocs = [];
+    const blocCount = parseInt(nbBlocks) || 1;
 
-    if (parent && parent !== null && parent !== "null") {
-      newBloc.parent = parent;
-    }
-
-    // Save the bloc
-    const savedBloc = await newBloc.save();
-
-    // Add the bloc to the parent
-    if (newBloc.parent) {
-      const parentBloc = await Bloc.findById(newBloc.parent);
-      parentBloc.blocs.push(savedBloc._id);
-
-      // Add the weight of the new bloc to the parent (if defined)
-      if (newBloc.weight) {
-        if (!parentBloc.weight) parentBloc.weight = 0;
-
-        if (
-          parentBloc.maxWeight &&
-          parentBloc.weight + newBloc.weight > parentBloc.maxWeight
-        ) {
-          return res.status(400).json({
-            message: "Parent bloc can't support the weight of the new bloc",
-          });
-        }
-
-        parentBloc.weight += newBloc.weight;
+    for (let i = 0; i < blocCount; i++) {
+      let blocName = name;
+      if (!sameNameForAll || sameNameForAll == "false") {
+        blocName = `${name}_${i + 1}`;
       }
-      await parentBloc.save();
+      // Bloc creation
+      const newBloc = new Bloc({
+        name: blocName,
+        picture: req.file ? `/uploads/bloc/${req.file.filename}` : null,
+        height,
+        width,
+        depth,
+        weight,
+        maxWeight,
+        blocs,
+        tags,
+        customFields,
+        warehouse,
+        addedBy: req.user._id,
+      });
+
+      if (parent && parent !== null && parent !== "null") {
+        newBloc.parent = parent;
+      }
+
+      // Save the bloc
+      const savedBloc = await newBloc.save();
+      console.log("Saved Bloc Id :", savedBloc._id);
+      console.log("New Bloc Id :", newBloc._id);
+
+      // Add the bloc to the parent
+      if (newBloc.parent) {
+        const parentBloc = await Bloc.findById(newBloc.parent);
+        parentBloc.blocs.push(savedBloc._id);
+
+        // Add the weight of the new bloc to the parent (if defined)
+        if (newBloc.weight) {
+          if (!parentBloc.weight) parentBloc.weight = 0;
+
+          if (
+            parentBloc.maxWeight &&
+            parentBloc.weight + newBloc.weight > parentBloc.maxWeight
+          ) {
+            return res.status(400).json({
+              message: "Parent bloc can't support the weight of the new bloc",
+            });
+          }
+
+          parentBloc.weight += newBloc.weight;
+        }
+        await parentBloc.save();
+      }
+      console.log("Bloc parent :", newBloc.parent);
+      // Add the bloc to the warehouse if no parent
+      if (!newBloc.parent) {
+        warehouseExists.blocs.push(savedBloc._id);
+      }
+
+      createdBlocs.push(savedBloc);
     }
 
-    // Add the bloc to the warehouse
-    if (!newBloc.parent) {
-      warehouseExists.blocs.push(savedBloc._id);
-      await warehouseExists.save();
-    }
-    res
-      .status(201)
-      .json({ message: "Bloc added with success", bloc: savedBloc });
+    // Save warehouse after all blocs are created
+    await warehouseExists.save();
+
+    res.status(201).json({
+      message: `${blocCount} bloc(s) added with success`,
+      blocs: createdBlocs,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Servor error", error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -300,7 +320,7 @@ const updateBloc = async (req, res) => {
     // Appliquer les mises à jour
     const updatedBloc = await Bloc.findByIdAndUpdate(blocId, updatedData, {
       new: true,
-    });
+    }).populate("tags");
 
     res
       .status(200)

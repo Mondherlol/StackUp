@@ -25,6 +25,7 @@ const WarehousePage = () => {
       try {
         const response = await axiosInstance.get(`/warehouse/${id}`);
         setWarehouse(response.data.warehouse);
+        console.log("Warehouse :", response.data.warehouse);
       } catch (err) {
         setError(err.message);
       } finally {

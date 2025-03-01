@@ -6,13 +6,13 @@ import { getBackendImageUrl } from "@/utils/imageUrl";
 const EditBlockModal = ({ isOpen, onClose, onEdit, block, parent }) => {
   const [formData, setFormData] = useState({
     name: block.name,
-    picture: null,
+    picture: "",
     height: block.height,
     width: block.width,
     depth: block.depth,
-    weight: block.weight,
-    maxWeight: block.maxWeight,
-    tags: block.tags,
+    weight: block.weight ? block.weight : "",
+    maxWeight: block.maxWeight ? block.maxWeight : "",
+    tags: block.tags ? block.tags : [],
   });
 
   const [tags, setTags] = useState([]);
@@ -82,16 +82,21 @@ const EditBlockModal = ({ isOpen, onClose, onEdit, block, parent }) => {
       const response = await axiosInstance.get(`/tag/${block.warehouse}`);
       setTags(response.data);
 
-      // Set selected tags
-      const selectedTags = block.tags.map((tagId) =>
-        response.data.find((tag) => tag._id === tagId)
-      );
-      setSelectedTags(selectedTags);
+      if (block.tags) {
+        console.log("tags response", response.data);
+        console.log("block.tags", block.tags);
+        // Set selected tags
+        const v_selectedTags = block.tags.map((block_tag) =>
+          response.data.find((tag) => tag._id === block_tag._id)
+        );
+        console.log("v_selectedTags", v_selectedTags);
+        setSelectedTags(v_selectedTags);
 
-      // Remove selected tags from tags list
-      setTags((prevTags) =>
-        prevTags.filter((tag) => !selectedTags.includes(tag))
-      );
+        // Remove selected tags from tags list
+        setTags((prevTags) =>
+          prevTags.filter((tag) => !v_selectedTags.includes(tag))
+        );
+      }
     } catch (error) {
       console.log("Error fetching tags: ", error);
       toast.error(

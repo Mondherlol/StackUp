@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { FaBoxOpen, FaSearch, FaEllipsisV } from "react-icons/fa";
 import { motion } from "framer-motion";
 import CreateBlockModal from "@/components/CreateBlockModal";
+import BlockModal from "./BlockModal";
+import EditBlockModal from "@/components/EditBlockModal";
 const { getBackendImageUrl } = require("@/utils/imageUrl");
 
-const ContainedBlocksTab = ({ block }) => {
+const ContainedBlocksTab = ({ block, onEdit }) => {
   const [search, setSearch] = useState("");
   const [isCreateBlockModalOpen, setIsCreateBlockModalOpen] = useState(false);
+  const [isEditBlockModalOpen, setIsEditBlockModalOpen] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState(null);
 
   return (
     <div>
@@ -36,7 +40,14 @@ const ContainedBlocksTab = ({ block }) => {
         {block.blocs
           .filter((b) => b.name.toLowerCase().includes(search.toLowerCase()))
           .map((childBlock) => (
-            <BlockCard key={childBlock._id} block={childBlock} />
+            <BlockCard
+              key={childBlock._id}
+              block={childBlock}
+              handleEditBlock={(block) => {
+                setSelectedBlock(block);
+                setIsEditBlockModalOpen(true);
+              }}
+            />
           ))}
       </div>
 
@@ -51,13 +62,27 @@ const ContainedBlocksTab = ({ block }) => {
           parent={block}
         />
       )}
+
+      {selectedBlock && isEditBlockModalOpen && (
+        <EditBlockModal
+          isOpen={isEditBlockModalOpen}
+          onClose={() => setIsEditBlockModalOpen(false)}
+          block={selectedBlock}
+          warehouseId={block.warehouse}
+          onEdit={(updatedBlock) => {
+            onEdit();
+            setSelectedBlock(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
-const BlockCard = ({ block }) => {
+const BlockCard = ({ block, handleEditBlock }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
   // Fermer le menu si on clique ailleurs
   useEffect(() => {
@@ -75,10 +100,13 @@ const BlockCard = ({ block }) => {
 
   const handleView = () => {
     console.log("View Block", block);
+    setIsBlockModalOpen(true);
   };
 
   const handleEdit = () => {
     console.log("Edit Block", block);
+    setIsMenuOpen(false);
+    handleEditBlock(block);
   };
 
   const handleDelete = () => {
@@ -86,76 +114,85 @@ const BlockCard = ({ block }) => {
   };
 
   return (
-    <motion.div className="relative bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition">
-      {block.picture ? (
-        <img
-          src={getBackendImageUrl(block.picture)}
-          alt={block.name}
-          className="w-full h-32 object-cover rounded-lg mb-2"
-        />
-      ) : (
-        <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
-          <span className="text-gray-600 font-semibold text-lg">
-            {block.name}
-          </span>
+    <>
+      <motion.div className="relative bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition">
+        {block.picture ? (
+          <img
+            src={getBackendImageUrl(block.picture)}
+            alt={block.name}
+            className="w-full h-32 object-cover rounded-lg mb-2"
+          />
+        ) : (
+          <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
+            <span className="text-gray-600 font-semibold text-lg">
+              {block.name}
+            </span>
+          </div>
+        )}
+
+        <h4 className="text-lg font-semibold text-blue-600 flex items-center">
+          <FaBoxOpen className="mr-2" /> {block.name}
+        </h4>
+        <p className="text-gray-700">
+          <strong>Dimensions:</strong> {block.width ?? "N/A"} x{" "}
+          {block.height ?? "N/A"} x {block.depth ?? "N/A"}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mt-1 ">
+          {block.tags.length === 0 && (
+            <p className="text-gray-500 text-sm">No tags</p>
+          )}
+          {block.tags.map((tag) => (
+            <div
+              key={tag._id}
+              className="flex items-center px-2 py-1 border rounded text-sm"
+              style={{ backgroundColor: tag.color, color: "#fff" }}
+            >
+              {tag.name}
+            </div>
+          ))}
         </div>
-      )}
 
-      <h4 className="text-lg font-semibold text-blue-600 flex items-center">
-        <FaBoxOpen className="mr-2" /> {block.name}
-      </h4>
-      <p className="text-gray-700">
-        <strong>Dimensions:</strong> {block.width ?? "N/A"} x{" "}
-        {block.height ?? "N/A"} x {block.depth ?? "N/A"}
-      </p>
-
-      <div className="flex flex-wrap gap-2 mt-1 ">
-        {block.tags.length === 0 && (
-          <p className="text-gray-500 text-sm">No tags</p>
-        )}
-        {block.tags.map((tag) => (
-          <div
-            key={tag._id}
-            className="flex items-center px-2 py-1 border rounded text-sm"
-            style={{ backgroundColor: tag.color, color: "#fff" }}
+        {/* Menu dropdown */}
+        <div className="absolute top-40 right-2" ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="text-gray-600 hover:text-gray-900"
           >
-            {tag.name}
-          </div>
-        ))}
-      </div>
-
-      {/* Menu dropdown */}
-      <div className="absolute top-40 right-2" ref={menuRef}>
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          <FaEllipsisV size={20} />
-        </button>
-        {isMenuOpen && (
-          <div className="absolute right-5 -top-5 bg-white border rounded-lg shadow-lg w-40 mt-2 z-50">
-            <button
-              onClick={handleView}
-              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
-            >
-              View Block
-            </button>
-            <button
-              onClick={handleEdit}
-              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
-            >
-              Edit Block
-            </button>
-            <button
-              onClick={handleDelete}
-              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
-            >
-              Delete Block
-            </button>
-          </div>
-        )}
-      </div>
-    </motion.div>
+            <FaEllipsisV size={20} />
+          </button>
+          {isMenuOpen && (
+            <div className="absolute right-5 -top-5 bg-white border rounded-lg shadow-lg w-40 mt-2 z-50">
+              <button
+                onClick={handleView}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+              >
+                View Block
+              </button>
+              <button
+                onClick={handleEdit}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+              >
+                Edit Block
+              </button>
+              <button
+                onClick={handleDelete}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+              >
+                Delete Block
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+      {isBlockModalOpen && (
+        <BlockModal
+          show={isBlockModalOpen}
+          onHide={() => setIsBlockModalOpen(false)}
+          blockId={block._id}
+        />
+      )}
+    </>
   );
 };
 

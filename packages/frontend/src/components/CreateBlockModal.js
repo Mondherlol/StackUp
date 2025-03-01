@@ -19,6 +19,8 @@ const CreateBlockModal = ({
     maxWeight: "",
     warehouse: warehouseId,
     parent: parent ? parent._id : null,
+    nbBlocks: 1,
+    sameNameForAll: false,
   });
 
   const [tags, setTags] = useState([]);
@@ -37,6 +39,8 @@ const CreateBlockModal = ({
       maxWeight: "",
       warehouse: warehouseId,
       parent: parent ? parent._id : null,
+      nbBlocks: 1,
+      sameNameForAll: false,
     });
     setSelectedTags([]);
     setSearchQuery("");
@@ -169,7 +173,7 @@ const CreateBlockModal = ({
         },
       });
       // Pass the created block to the parent component
-      onCreate(response.data.bloc);
+      onCreate(response.data.blocs);
       onClose();
       toast.success("Block added successfully");
     } catch (error) {
@@ -183,20 +187,61 @@ const CreateBlockModal = ({
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
       <div className="bg-white p-6 rounded-lg shadow-xl w-[400px]">
         <h2 className="text-lg font-semibold mb-4">
-          {parent ? `Add sub-block to ${parent.name}` : "Create Block"}
+          {parent ? `Add sub-block(s) to ${parent.name}` : "Create Block(s)"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
-            Block Name
-          </label>
-          <input
-            className="w-full p-2 border rounded"
-            name="name"
-            placeholder="Enter block name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          <div className="flex justify-between items-center space-x-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Block Name
+            </label>
+
+            <label className="block text-sm font-medium text-gray-700">
+              Nb. of blocks
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              className="w-full p-2 border rounded"
+              name="name"
+              placeholder="Enter block name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="number"
+              className="w-1/3 p-2 border rounded"
+              name="nbBlocks"
+              placeholder="1 or +"
+              value={formData.nbBlocks}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {formData.nbBlocks > 1 && (
+            <div className="flex items-center space-x-2 mb-2">
+              <input
+                type="checkbox"
+                id="sameNameForAll"
+                name="sameNameForAll"
+                checked={formData.sameNameForAll}
+                onChange={(e) =>
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    sameNameForAll: e.target.checked,
+                  }))
+                }
+              />
+              <label
+                htmlFor="sameNameForAll"
+                className="text-sm font-medium text-gray-700"
+              >
+                Use same name for all blocks
+              </label>
+            </div>
+          )}
 
           <label className="block text-sm font-medium text-gray-700">
             Image

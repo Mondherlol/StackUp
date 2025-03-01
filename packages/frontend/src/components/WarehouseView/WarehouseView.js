@@ -38,12 +38,17 @@ const WarehouseView = ({ warehouse }) => {
   useEffect(() => {
     if (!warehouse) return;
     setBlocks(warehouse.blocs);
+    console.log("Blocks in warehouse :", warehouse.blocs);
   }, [warehouse]);
 
-  const onCreateBlock = (bloc) => {
-    if (bloc.parent) return; // We only add the block if it's a root block
+  useEffect(() => {
+    console.log("Blocks Updated :", blocks);
+  }, [blocks]);
 
-    setBlocks([...blocks, bloc]);
+  const onCreateBlock = (blocs) => {
+    if (blocs[0].parent) return; // We only add the block if it's a root block
+
+    setBlocks([...blocks, ...blocs]);
   };
 
   const onEditBlock = (bloc) => {
@@ -210,9 +215,12 @@ const WarehouseView = ({ warehouse }) => {
           </button>
           <button
             className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-            onClick={() => setCreateBlocModalOpen(true)}
+            onClick={() => {
+              setSelectedBlock(null);
+              setCreateBlocModalOpen(true);
+            }}
           >
-            ➕ Add a block
+            ➕ Add block(s)
           </button>
         </div>
         <CreateBlockModal

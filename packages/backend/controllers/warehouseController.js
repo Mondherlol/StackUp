@@ -95,6 +95,9 @@ const getWarehouseById = async (req, res) => {
       },
       {
         path: "blocs",
+        populate: {
+          path: "tags",
+        },
       },
     ]);
 
