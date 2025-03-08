@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import EditBlockModal from "../EditBlockModal";
 import BlockLayer from "./BlockLayer";
 
-const WarehouseView = ({ warehouse }) => {
+const WarehouseView = ({ warehouse, fetchWarehouse }) => {
   const [blocks, setBlocks] = useState([]);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -148,10 +148,7 @@ const WarehouseView = ({ warehouse }) => {
   const handleSetParent = async (blockId, parentId) => {
     try {
       await axiosInstance.put(`/bloc/${blockId}/parent/${parentId}`);
-      const newBlocks = blocks.map((b) =>
-        b._id === blockId ? { ...b, parent: parentId } : b
-      );
-      setBlocks(newBlocks);
+      await fetchWarehouse();
       setCopiedBlock(null);
       toast.success("Block moved successfully");
     } catch (error) {

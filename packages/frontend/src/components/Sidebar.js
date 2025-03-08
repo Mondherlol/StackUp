@@ -61,7 +61,7 @@ const Sidebar = () => {
             <NavItem
               href="/settings"
               icon={<FaCog />}
-              label="System Settings"
+              label=" Settings"
               pathname={pathname}
             />
           </ul>

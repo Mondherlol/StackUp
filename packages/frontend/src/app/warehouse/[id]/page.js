@@ -71,7 +71,7 @@ const WarehousePage = () => {
         </div>
       </div>
 
-      <WarehouseView warehouse={warehouse} />
+      <WarehouseView warehouse={warehouse} fetchWarehouse={fetchWarehouse} />
 
       <div className="flex justify-end flex-col gap-2 mt-4 fixed bottom-6 right-6">
         {/*  Bouton flottant pour les actions en lot */}

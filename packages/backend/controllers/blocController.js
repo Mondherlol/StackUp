@@ -488,6 +488,54 @@ const searchBloc = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+const editBatchName = async (req, res) => {
+  try {
+    const { blocIds } = req.body;
+    const { name, sameNameForAll } = req.body;
+
+    if (!blocIds) {
+      return res.status(400).json({ message: "blocIds is required" });
+    }
+
+    if (!name) {
+      return res.status(400).json({ message: "name is required" });
+    }
+
+    for (i = 0; i < blocIds.length; i++) {
+      const blocId = blocIds[i];
+      const bloc = await Bloc.findById(blocId);
+      if (!bloc) {
+        continue;
+      }
+
+      bloc.name = sameNameForAll ? name : `${name}_${i + 1}`;
+      await bloc.save();
+    }
+
+    return res.status(200).json({ message: "Names updated with success" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
+const getBatchBlocs = async (req, res) => {
+  try {
+    const { blocIds } = req.body;
+
+    if (!blocIds) {
+      return res.status(400).json({ message: "blocIds is required" });
+    }
+
+    const blocs = await Bloc.find({ _id: { $in: blocIds } });
+
+    return res.status(200).json(blocs);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
 module.exports = {
   getBloc,
   createBloc,
@@ -499,4 +547,6 @@ module.exports = {
   searchBloc,
   changeParentsBatch,
   upload,
+  editBatchName,
+  getBatchBlocs,
 };
