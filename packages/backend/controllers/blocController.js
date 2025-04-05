@@ -477,6 +477,51 @@ const changeParentsBatch = async (req, res) => {
   }
 };
 
+const updateTagsBatch = async (req, res) => {
+  try {
+    const { blocIds, tags, removeOtherTags } = req.body;
+    if (!blocIds || !Array.isArray(blocIds)) {
+      return res.status(400).json({ message: "blocIds must be an array" });
+    }
+
+    if (!tags || !Array.isArray(tags)) {
+      return res.status(400).json({ message: "tags must be an array" });
+    }
+
+    // Vérifier si les tags sont valides
+    const validTags = tags.filter((tag) =>
+      mongoose.Types.ObjectId.isValid(tag)
+    );
+    if (validTags.length !== tags.length) {
+      return res.status(400).json({ message: "Invalid tag IDs" });
+    }
+
+    // Mise à jour en boucle (peut être optimisée en bulkWrite aussi)
+
+    for (let blocId of blocIds) {
+      const bloc = await Bloc.findById(blocId);
+      if (!bloc) continue;
+
+      if (removeOtherTags) {
+        // Supprimer tous les tags existants
+        bloc.tags = [];
+      }
+      // Add new tags if not already present
+      const existingTagIds = bloc.tags.map((tag) => tag._id.toString());
+      const newTags = validTags.filter(
+        (tag) => !existingTagIds.includes(tag.toString())
+      );
+      bloc.tags.push(...newTags);
+      await bloc.save();
+    }
+
+    return res.status(200).json({ message: "Tags updated successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const updateDimensionsBatch = async (req, res) => {
   try {
     const { blocIds, width, height, depth, weight } = req.body;
@@ -680,6 +725,51 @@ const changeWarehouse = async (req, res) => {
   }
 };
 
+const updatePictureBatch = async (req, res) => {
+  try {
+    let blocIds = req.body.blocIds;
+
+    try {
+      blocIds = typeof blocIds === "string" ? JSON.parse(blocIds) : blocIds;
+    } catch (err) {
+      return res.status(400).json({ message: "Invalid blocIds format" });
+    }
+
+    if (!Array.isArray(blocIds)) {
+      return res.status(400).json({ message: "blocIds must be an array" });
+    }
+
+    // Vérifier s’il y a une image envoyée
+    if (!req.file) {
+      return res.status(400).json({ message: "A picture file is required" });
+    }
+
+    const updatedPicture = `/uploads/bloc/${req.file.filename}`;
+
+    const updatedBlocs = [];
+
+    for (let blocId of blocIds) {
+      const bloc = await Bloc.findById(blocId);
+      if (!bloc) continue;
+
+      bloc.picture = updatedPicture;
+      bloc.lastUpdate = Date.now();
+      await bloc.save();
+
+      updatedBlocs.push(bloc);
+    }
+
+    return res.status(200).json({
+      message: "Pictures updated successfully",
+      updatedCount: updatedBlocs.length,
+      blocs: updatedBlocs,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 module.exports = {
   getBloc,
   createBloc,
@@ -691,9 +781,11 @@ module.exports = {
   searchBloc,
   changeParentsBatch,
   updateDimensionsBatch,
+  updatePictureBatch,
   upload,
   editBatchName,
   getBatchBlocs,
   getAllBlocs,
+  updateTagsBatch,
   changeWarehouse,
 };

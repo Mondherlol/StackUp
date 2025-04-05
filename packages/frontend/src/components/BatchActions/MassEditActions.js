@@ -8,6 +8,8 @@ import {
 } from "react-icons/fi";
 import EditName from "./EditName";
 import EditDimensions from "./EditDimensions";
+import EditPicture from "./EditPictures";
+import EditTags from "./EditTags";
 
 const MassEditActions = ({ selectedItems, onCancel, onUpdate }) => {
   const [activeAction, setActiveAction] = useState(null);
@@ -25,19 +27,10 @@ const MassEditActions = ({ selectedItems, onCancel, onUpdate }) => {
     tags: {
       label: "Modifier les tags",
       icon: <FiTag className="mr-2" />,
-      component: (
-        <div className="w-full">
-          <label className="block text-gray-700 font-medium mb-1">
-            Nouveaux tags
-          </label>
-          <input
-            type="text"
-            placeholder="Entrez des tags"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      ),
+      component: <EditTags batch={selectedItems} onSave={handleSave} />,
+      onSave: () => document.getElementById("save-edit-tags")?.click(),
     },
+
     name: {
       label: "Modifier le nom",
       icon: <FiEdit className="mr-2" />,
@@ -53,18 +46,8 @@ const MassEditActions = ({ selectedItems, onCancel, onUpdate }) => {
     picture: {
       label: "Modifier l’image",
       icon: <FiImage className="mr-2" />,
-      component: (
-        <div className="w-full">
-          <label className="block text-gray-700 font-medium mb-1">
-            Nouvelle image
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-          />
-        </div>
-      ),
+      component: <EditPicture batch={selectedItems} onSave={handleSave} />,
+      onSave: () => document.getElementById("save-edit-picture")?.click(),
     },
   };
 

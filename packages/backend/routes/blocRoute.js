@@ -13,8 +13,10 @@ const {
   changeParentsBatch,
   editBatchName,
   updateDimensionsBatch,
+  updatePictureBatch,
   getBatchBlocs,
   getAllBlocs,
+  updateTagsBatch,
   changeWarehouse,
   upload,
 } = require("../controllers/blocController");
@@ -40,6 +42,14 @@ blocRouter.put("/:blocId/parent/:newParentId", authMiddleware, changeParent);
 blocRouter.put("/batch/parent", authMiddleware, changeParentsBatch);
 blocRouter.put("/batch/name", authMiddleware, editBatchName);
 blocRouter.put("/batch/dimensions", authMiddleware, updateDimensionsBatch);
+blocRouter.put("/batch/tags", authMiddleware, updateTagsBatch);
+blocRouter.put(
+  "/batch/picture",
+  authMiddleware,
+  upload.single("picture"),
+  updatePictureBatch
+);
+
 blocRouter.post("/get-batch/", getBatchBlocs);
 
 module.exports = blocRouter;
