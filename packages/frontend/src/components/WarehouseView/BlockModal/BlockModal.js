@@ -29,7 +29,9 @@ const BlockModal = ({ blockId, show, onHide }) => {
 
   const fetchBlock = async () => {
     try {
-      const response = await axiosInstance.get(`/bloc/${blockId}`);
+      const response = await axiosInstance.get(
+        `/bloc/${blockId}?parentChain=true`
+      );
       if (response.status === 200) {
         setBlock(response.data);
         console.log("Block data:", response.data);

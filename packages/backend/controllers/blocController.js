@@ -32,6 +32,11 @@ const getBloc = async (req, res) => {
       return res.status(404).json({ message: "Bloc not found" });
     }
 
+    // Query get chain of parents
+    if (!req.query.parentChain) {
+      return res.status(200).json(bloc);
+    }
+
     // Get parent chain
     const parentChain = [];
     let currentParent = await Bloc.findById(bloc.parent);
@@ -477,7 +482,8 @@ const searchBloc = async (req, res) => {
     const { warehouseId } = req.params;
     const { query, tags, sortBy } = req.query;
     const filter = {
-      name: { $regex: query, $options: "i" },
+      warehouse: warehouseId,
+      name: { $regex: query || "", $options: "i" },
     };
 
     if (tags) {

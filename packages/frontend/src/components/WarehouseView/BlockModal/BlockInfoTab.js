@@ -21,6 +21,7 @@ const BlockInfoTab = ({ block }) => {
     <>
       {block?.parentChain && (
         <div className=" text-sm text-gray-600 px-2">
+          <span>root &gt; </span>
           {block.parentChain.map((parent, index) => (
             <span key={parent._id}>
               {index > 0 && " > "}

@@ -102,6 +102,7 @@ const WarehousePage = () => {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
         query={searchQuery}
+        warehouseId={id}
         setQuery={setSearchQuery}
         onClick={(bloc) => {
           setIsSearchModalOpen(false);
