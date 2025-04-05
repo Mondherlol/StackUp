@@ -66,12 +66,14 @@ const ManagementPage = () => {
     }
 
     try {
-      await axiosInstance.post("/bloc/move", {
-        blocIds: selectedBlocks,
-        targetWarehouse,
-      });
+      for (const blockId of selectedBlocks) {
+        await axiosInstance.put(`/bloc/change-warehouse/${blockId}`, {
+          newWarehouseId: targetWarehouse,
+        });
+      }
       toast.success("Blocks moved successfully");
       setIsMoveModalOpen(false);
+
       setSelectedBlocks([]);
       fetchData();
     } catch (error) {

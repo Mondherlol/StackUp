@@ -12,8 +12,10 @@ const {
   changeParent,
   changeParentsBatch,
   editBatchName,
+  updateDimensionsBatch,
   getBatchBlocs,
   getAllBlocs,
+  changeWarehouse,
   upload,
 } = require("../controllers/blocController");
 
@@ -26,6 +28,8 @@ blocRouter.post("/", authMiddleware, upload.single("picture"), createBloc);
 blocRouter.delete("/:blocId", authMiddleware, checkBlocPermissions, deleteBloc);
 blocRouter.put("/move", authMiddleware, moveBlocs); // Move multiple blocs
 blocRouter.put("/:blocId/move", authMiddleware, checkBlocPermissions, moveBloc); // Move single bloc
+blocRouter.put("/change-warehouse/:blocId", authMiddleware, changeWarehouse); // Change warehouse of a bloc
+
 blocRouter.put(
   "/:blocId",
   authMiddleware,
@@ -35,6 +39,7 @@ blocRouter.put(
 blocRouter.put("/:blocId/parent/:newParentId", authMiddleware, changeParent);
 blocRouter.put("/batch/parent", authMiddleware, changeParentsBatch);
 blocRouter.put("/batch/name", authMiddleware, editBatchName);
+blocRouter.put("/batch/dimensions", authMiddleware, updateDimensionsBatch);
 blocRouter.post("/get-batch/", getBatchBlocs);
 
 module.exports = blocRouter;

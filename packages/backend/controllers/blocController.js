@@ -477,6 +477,42 @@ const changeParentsBatch = async (req, res) => {
   }
 };
 
+const updateDimensionsBatch = async (req, res) => {
+  try {
+    const { blocIds, width, height, depth, weight } = req.body;
+
+    if (!blocIds || !Array.isArray(blocIds)) {
+      return res.status(400).json({ message: "blocIds must be an array" });
+    }
+
+    const updateFields = {};
+    if (width !== undefined) updateFields.width = width;
+    if (height !== undefined) updateFields.height = height;
+    if (depth !== undefined) updateFields.depth = depth;
+    if (weight !== undefined) updateFields.weight = weight;
+
+    if (Object.keys(updateFields).length === 0) {
+      return res
+        .status(400)
+        .json({ message: "At least one dimension must be provided" });
+    }
+
+    // Mise à jour en boucle (peut être optimisée en bulkWrite aussi)
+    for (let blocId of blocIds) {
+      const bloc = await Bloc.findById(blocId);
+      if (!bloc) continue;
+
+      Object.assign(bloc, updateFields);
+      await bloc.save();
+    }
+
+    return res.status(200).json({ message: "Dimensions updated successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const searchBloc = async (req, res) => {
   try {
     const { warehouseId } = req.params;
@@ -588,6 +624,62 @@ const getAllBlocs = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+const changeWarehouse = async (req, res) => {
+  try {
+    const { blocId } = req.params;
+    const { newWarehouseId } = req.body;
+
+    // Vérifier si le bloc et le nouveau warehouse existent
+    const bloc = await Bloc.findById(blocId);
+    if (!bloc) return res.status(404).json({ message: "Bloc not found" });
+
+    const newWarehouse = await Warehouse.findById(newWarehouseId);
+    if (!newWarehouse)
+      return res.status(404).json({ message: "New warehouse not found" });
+
+    // Retirer le bloc de l'ancien warehouse
+    const oldWarehouse = await Warehouse.findById(bloc.warehouse);
+    if (oldWarehouse) {
+      oldWarehouse.blocs = oldWarehouse.blocs.filter(
+        (id) => id.toString() !== bloc._id.toString()
+      );
+      await oldWarehouse.save();
+    }
+
+    // Ajouter le bloc au nouveau warehouse
+    newWarehouse.blocs.push(bloc._id);
+    await newWarehouse.save();
+
+    // Fonction récursive pour mettre à jour les descendants
+    const updateChildrenWarehouse = async (parentId) => {
+      const children = await Bloc.find({ parent: parentId });
+
+      for (const child of children) {
+        child.warehouse = newWarehouseId;
+        await child.save(); // ou faire un bulkWrite pour plus d’optimisation si beaucoup d’enfants
+
+        // Appel récursif
+        await updateChildrenWarehouse(child._id);
+      }
+    };
+
+    // Mettre à jour le bloc racine
+    bloc.warehouse = newWarehouseId;
+    await bloc.save();
+
+    // Mettre à jour récursivement tous les descendants
+    await updateChildrenWarehouse(blocId);
+
+    return res
+      .status(200)
+      .json({ message: "Bloc and its children moved to new warehouse" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
+
 module.exports = {
   getBloc,
   createBloc,
@@ -598,8 +690,10 @@ module.exports = {
   changeParent,
   searchBloc,
   changeParentsBatch,
+  updateDimensionsBatch,
   upload,
   editBatchName,
   getBatchBlocs,
   getAllBlocs,
+  changeWarehouse,
 };

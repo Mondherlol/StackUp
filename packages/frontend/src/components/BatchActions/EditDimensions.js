@@ -15,9 +15,13 @@ const EditDimensions = ({ batch, onSave }) => {
   const handleEditDimensions = async () => {
     try {
       const blocIds = batch.map((b) => b._id);
-      const response = await axiosInstance.put("/bloc/batch/name", {
+      const response = await axiosInstance.put("/bloc/batch/dimensions", {
         blocIds,
-        name,
+
+        width: dimensions.width,
+        height: dimensions.height,
+        depth: dimensions.depth,
+        weight: dimensions.weight,
       });
 
       if (response.status === 200) {
