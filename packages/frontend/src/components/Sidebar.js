@@ -5,8 +5,13 @@ import { FiMenu, FiX } from "react-icons/fi";
 import { FaCubes, FaWrench, FaBoxOpen, FaCog } from "react-icons/fa";
 import { LuArrowLeftFromLine } from "react-icons/lu";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 const Sidebar = () => {
+  const { user, logout } = useAuth();
+
+  if (!user) return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -53,7 +58,7 @@ const Sidebar = () => {
               pathname={pathname}
             />
             <NavItem
-              href="/categorize"
+              href="/management"
               icon={<FaWrench />}
               label="Management"
               pathname={pathname}

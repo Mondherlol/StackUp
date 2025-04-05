@@ -13,13 +13,15 @@ const {
   changeParentsBatch,
   editBatchName,
   getBatchBlocs,
+  getAllBlocs,
   upload,
 } = require("../controllers/blocController");
 
 const blocRouter = express.Router();
 
 blocRouter.get("/search/:warehouseId", authMiddleware, searchBloc);
-blocRouter.get("/:blocId", getBloc);
+blocRouter.get("/all", authMiddleware, getAllBlocs);
+blocRouter.get("/:blocId", authMiddleware, getBloc);
 blocRouter.post("/", authMiddleware, upload.single("picture"), createBloc);
 blocRouter.delete("/:blocId", authMiddleware, checkBlocPermissions, deleteBloc);
 blocRouter.put("/move", authMiddleware, moveBlocs); // Move multiple blocs

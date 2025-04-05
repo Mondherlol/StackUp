@@ -5,12 +5,16 @@ import "tailwindcss/tailwind.css";
 import axiosInstance from "@/utils/axiosConfig";
 import { FaUsers, FaEdit, FaEye, FaTrash, FaPlus } from "react-icons/fa";
 import CollaboratorsModal from "@/components/CollaboratorsModal";
+import EditWarehouseModal from "@/components/EditWarehouseModal";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const WarehousesList = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [isCollaboratorModalOpen, setIsCollaboratorModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     getWarehouses();
@@ -25,9 +29,23 @@ const WarehousesList = () => {
   const updateSelectedWarehouse = async (warehouseId) => {
     try {
       const response = await axiosInstance.get(`/warehouse/${warehouseId}`);
-      setSelectedWarehouse(response.data.warehouse); // Met à jour l'entrepôt dans le modal
+      setSelectedWarehouse(response.data.warehouse);
     } catch (error) {
       console.error("Error updating selected warehouse:", error);
+    }
+  };
+
+  const handleDelete = async (warehouseId) => {
+    if (window.confirm("Are you sure you want to delete this warehouse?")) {
+      try {
+        await axiosInstance.delete(`/warehouse/${warehouseId}`);
+        toast.success("Warehouse deleted successfully");
+        getWarehouses();
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Error deleting warehouse"
+        );
+      }
     }
   };
 
@@ -71,10 +89,22 @@ const WarehousesList = () => {
               >
                 <FaUsers /> Collaborators
               </button>
-              <button className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-full shadow hover:bg-yellow-600 transition">
+              <button
+                onClick={() => {
+                  setSelectedWarehouse(warehouse);
+                  setIsEditModalOpen(true);
+                }}
+                disabled={warehouse.addedBy != user._id}
+                className="flex items-center disabled:opacity-75 disabled:bg-gray-700 gap-2 bg-yellow-500 text-white px-4 py-2 rounded-full shadow hover:bg-yellow-600 transition"
+              >
                 <FaEdit /> Edit
               </button>
-              <button className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full shadow hover:bg-red-600 transition">
+
+              <button
+                onClick={() => handleDelete(warehouse._id)}
+                disabled={warehouse.addedBy != user._id}
+                className="flex items-center gap-2 disabled:bg-gray-700 disabled:opacity-75 bg-red-500 text-white px-4 py-2 rounded-full shadow hover:bg-red-600 transition"
+              >
                 <FaTrash /> Delete
               </button>
             </div>
@@ -95,12 +125,19 @@ const WarehousesList = () => {
         onClose={() => setIsCollaboratorModalOpen(false)}
         warehouse={selectedWarehouse}
         onUpdate={() => {
-          getWarehouses(); // 🔹 Met à jour la liste des entrepôts
+          getWarehouses();
           if (selectedWarehouse) {
-            updateSelectedWarehouse(selectedWarehouse._id); // 🔹 Rafraîchit l'entrepôt dans le modal
+            updateSelectedWarehouse(selectedWarehouse._id);
           }
         }}
         setWarehouse={setSelectedWarehouse}
+      />
+
+      <EditWarehouseModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        warehouse={selectedWarehouse}
+        onUpdate={getWarehouses}
       />
     </div>
   );

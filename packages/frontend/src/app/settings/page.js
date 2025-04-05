@@ -1,16 +1,36 @@
 "use client";
-import React, { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "@/utils/axiosConfig";
+import { getBackendImageUrl } from "@/utils/imageUrl";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 const SettingsPage = () => {
+  const { user, logout, updateUser } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username);
+      setEmail(user.email);
+      setProfilePicture(user.profilePicture);
+    }
+  }, [user]);
+
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState("JohnDoe");
-  const [email, setEmail] = useState("johndoe@example.com");
+  const [username, setUsername] = useState(user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicture, setProfilePicture] = useState(null); // vrai fichier
+  const [profilePreview, setProfilePreview] = useState(""); // juste pour l'affichage
 
-  const handleProfilePictureChange = (e) =>
-    setProfilePicture(URL.createObjectURL(e.target.files[0]));
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file); // <== Ceci est important pour le FormData
+      setProfilePreview(URL.createObjectURL(file)); // Pour afficher l'image
+    }
+  };
 
   const toggleEdit = () => {
     setIsEditing(!isEditing);
@@ -20,11 +40,41 @@ const SettingsPage = () => {
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Les mots de passe ne correspondent pas !");
       return;
     }
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("username", username);
+      formDataToSend.append("email", email);
+      formDataToSend.append("password", password);
+      if (profilePicture) {
+        formDataToSend.append("profilePicture", profilePicture);
+      }
+
+      const response = await axiosInstance.put("/user", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 200) {
+        toast.success("Profil mis à jour avec succès !");
+        updateUser(response.data.user);
+      } else {
+        toast.error("Erreur : " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil :", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Erreur lors de la mise à jour du profil"
+      );
+    }
+
     setIsEditing(false);
   };
 
@@ -38,13 +88,16 @@ const SettingsPage = () => {
           <div className="relative w-32 h-32">
             <img
               src={
-                profilePicture
-                  ? profilePicture
-                  : `https://ui-avatars.com/api/?name=Mondher`
+                profilePreview
+                  ? profilePreview
+                  : user && user.profilePicture
+                  ? getBackendImageUrl(user.profilePicture) // Si l'utilisateur a une image de profil
+                  : `https://ui-avatars.com/api/?name=${username}`
               }
               alt="Picture"
               className="w-32 h-32 rounded-full object-cover border-4 border-blue-400"
             />
+
             {isEditing && (
               <input
                 type="file"

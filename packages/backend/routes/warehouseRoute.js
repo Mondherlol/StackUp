@@ -9,6 +9,8 @@ const {
   addMember,
   removeMember,
   changeRole,
+  updateWarehouse,
+  deleteWarehouse,
   upload,
 } = require("../controllers/warehouseController");
 
@@ -35,5 +37,7 @@ warehouseRouter.delete(
   removeMember
 );
 warehouseRouter.post("/:inviteToken/join", authMiddleware, joinWarehouse);
+warehouseRouter.put("/:id", authMiddleware, updateWarehouse);
+warehouseRouter.delete("/:id", authMiddleware, deleteWarehouse);
 
 module.exports = warehouseRouter;

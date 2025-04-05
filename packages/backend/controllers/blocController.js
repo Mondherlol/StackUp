@@ -32,7 +32,23 @@ const getBloc = async (req, res) => {
       return res.status(404).json({ message: "Bloc not found" });
     }
 
-    res.status(200).json(bloc);
+    // Get parent chain
+    const parentChain = [];
+    let currentParent = await Bloc.findById(bloc.parent);
+
+    while (currentParent) {
+      parentChain.unshift({
+        _id: currentParent._id,
+        name: currentParent.name,
+      });
+      currentParent = await Bloc.findById(currentParent.parent);
+    }
+
+    // Add parent chain to response
+    const response = bloc.toObject();
+    response.parentChain = parentChain;
+
+    res.status(200).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error });
@@ -536,6 +552,36 @@ const getBatchBlocs = async (req, res) => {
     return res.status(500).json({ message: "Server error", error });
   }
 };
+
+const getAllBlocs = async (req, res) => {
+  try {
+    const warehouses = await Warehouse.find({
+      $or: [
+        {
+          members: {
+            $elemMatch: {
+              user: req.user._id,
+              role: { $in: ["ADMIN", "MEMBER"] },
+            },
+          },
+        },
+        { addedBy: req.user._id },
+      ],
+    });
+
+    const warehouseIds = warehouses.map((w) => w._id);
+    const blocs = await Bloc.find({
+      warehouse: { $in: warehouseIds },
+    })
+      .populate("tags")
+      .populate("warehouse", "name _id");
+
+    return res.status(200).json(blocs);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
 module.exports = {
   getBloc,
   createBloc,
@@ -549,4 +595,5 @@ module.exports = {
   upload,
   editBatchName,
   getBatchBlocs,
+  getAllBlocs,
 };

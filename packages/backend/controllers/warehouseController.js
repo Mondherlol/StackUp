@@ -1,5 +1,8 @@
 const Warehouse = require("../models/warehouseModel");
 const User = require("../models/userModel");
+const Note = require("../models/noteModel");
+const Tag = require("../models/tagModel");
+const Block = require("../models/blocModel");
 
 const multer = require("multer");
 const path = require("path");
@@ -71,14 +74,14 @@ const createWarehouse = async (req, res) => {
 
 const getWarehousesByUser = async (req, res) => {
   try {
-    const warehouses = await Warehouse.find({ addedBy: req.user._id }).populate(
-      [
-        {
-          path: "members.user",
-          select: "email username",
-        },
-      ]
-    );
+    const warehouses = await Warehouse.find({
+      $or: [{ addedBy: req.user._id }, { "members.user": req.user._id }],
+    }).populate([
+      {
+        path: "members.user",
+        select: "email username",
+      },
+    ]);
 
     res.status(200).json({ warehouses });
   } catch (error) {
@@ -269,6 +272,61 @@ const changeRole = async (req, res) => {
   }
 };
 
+const updateWarehouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, location, maxWeight } = req.body;
+
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(id, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
+
+    if (name) warehouse.name = name;
+    if (description) warehouse.description = description;
+    if (location) warehouse.location = location;
+    if (maxWeight) warehouse.maxWeight = maxWeight;
+
+    await warehouse.save();
+    res
+      .status(200)
+      .json({ message: "Warehouse updated successfully", warehouse });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const deleteWarehouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { warehouse, isAuthorized, error } =
+      await getWarehouseAndCheckPermission(id, req.user._id);
+    if (error) return res.status(error.status).json({ message: error.message });
+    if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
+
+    // Supprimer les notes associées aux blocs de l'entrepôt
+    await Note.deleteMany({
+      bloc: { $in: await Block.find({ warehouse: id }).select("_id") },
+    });
+
+    // Supprimer les blocks associés
+    await Block.deleteMany({ warehouse: id });
+
+    // Supprimer les tags associés
+    await Tag.deleteMany({ warehouse: id });
+
+    // Supprimer l'entrepôt
+    await warehouse.deleteOne();
+
+    res
+      .status(200)
+      .json({ message: "Warehouse and associated data deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createWarehouse,
   getWarehousesByUser,
@@ -278,5 +336,7 @@ module.exports = {
   addMember,
   removeMember,
   changeRole,
+  updateWarehouse,
+  deleteWarehouse,
   upload,
 };

@@ -3,6 +3,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const path = require("path");
+const multer = require("multer");
+
+// Config of Multer to store images in "uploads/user/" folder
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/user/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique name
+  },
+});
+
+const upload = multer({ storage: storage });
+
 // Helper function to generate JWT Token
 const generateToken = (user) => {
   return jwt.sign(
@@ -78,6 +93,7 @@ const loginUser = async (req, res) => {
       user: {
         _id: user._id,
         email: user.email,
+        profilePicture: user.profilePicture,
         username: user.username,
       },
       token,
@@ -120,5 +136,67 @@ const searchUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+// Update user profile
+const updateUser = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const userId = req.user._id;
 
-module.exports = { registerUser, loginUser, getProfile, searchUsers };
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    // Vérifier si l'email est déjà utilisé par un autre utilisateur
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({ message: "This email is already used" });
+      }
+      user.email = email;
+    }
+
+    // Mettre à jour le nom d'utilisateur s'il est fourni
+    if (username) {
+      user.username = username;
+    }
+
+    if (req.file) {
+      console.log("Fichier reçu : ", req.file.filename);
+
+      user.profilePicture = `/uploads/user/${req.file.filename}`;
+    }
+
+    // Mettre à jour le mot de passe s'il est fourni
+    if (password) {
+      if (password.length < 3) {
+        return res
+          .status(400)
+          .json({ message: "Password must be at least 3 characters bro" });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+
+    // Renvoyer l'utilisateur mis à jour sans le mot de passe
+    const updatedUser = await User.findById(userId).select("-password");
+
+    res.status(200).json({
+      message: "Profil mis à jour avec succès",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getProfile,
+  searchUsers,
+  updateUser,
+  upload,
+};

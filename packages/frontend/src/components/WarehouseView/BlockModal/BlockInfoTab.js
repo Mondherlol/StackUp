@@ -1,15 +1,50 @@
 "use client";
 import { FaWeight, FaRulerCombined, FaClock } from "react-icons/fa";
 import NotesSection from "./NoteSection";
+import BlockModal from "./BlockModal";
+import { useState } from "react";
 const { getBackendImageUrl } = require("@/utils/imageUrl");
 
 const BlockInfoTab = ({ block }) => {
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
+
+  const handleBlockClick = (blockId) => {
+    setSelectedBlockId(blockId);
+    setIsBlockModalOpen(true);
+  };
+  const handleBlockModalClose = () => {
+    setIsBlockModalOpen(false);
+    setSelectedBlockId(null);
+  };
   return (
     <>
+      {block?.parentChain && (
+        <div className=" text-sm text-gray-600 px-2">
+          {block.parentChain.map((parent, index) => (
+            <span key={parent._id}>
+              {index > 0 && " > "}
+              <button
+                className="text-blue-500 hover:underline"
+                onClick={() => handleBlockClick(parent._id)}
+              >
+                {parent.name}
+              </button>
+            </span>
+          ))}
+          <span>
+            {block.parentChain.length > 0 && " > "}
+            <button className="text-blue-500 hover:underline">
+              {block.name}
+            </button>
+          </span>
+        </div>
+      )}
+
       <div
         className={`grid grid-cols-1 sm:grid-cols-${
           block.picture ? "2" : "1"
-        } gap-4 mt-4 `}
+        } gap-4  `}
       >
         {block.picture && (
           <img
@@ -79,6 +114,14 @@ const BlockInfoTab = ({ block }) => {
       </p>
 
       <NotesSection blocId={block._id} />
+
+      {isBlockModalOpen && (
+        <BlockModal
+          show={isBlockModalOpen}
+          onHide={() => setIsBlockModalOpen(false)}
+          blockId={selectedBlockId}
+        />
+      )}
     </>
   );
 };

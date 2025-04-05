@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
+import { getBackendImageUrl } from "@/utils/imageUrl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiChevronDown, FiLogOut, FiSettings } from "react-icons/fi";
@@ -20,7 +21,11 @@ const Navbar = () => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <img
-          src={`https://ui-avatars.com/api/?name=${user.username}`}
+          src={
+            user.profilePicture
+              ? getBackendImageUrl(user.profilePicture) // Si l'utilisateur a une image de profil
+              : `https://ui-avatars.com/api/?name=${user.username}`
+          }
           alt="User Avatar"
           className="w-10 h-10 rounded-full border border-gray-300"
         />

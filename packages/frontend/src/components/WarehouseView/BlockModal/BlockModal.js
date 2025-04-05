@@ -32,6 +32,7 @@ const BlockModal = ({ blockId, show, onHide }) => {
       const response = await axiosInstance.get(`/bloc/${blockId}`);
       if (response.status === 200) {
         setBlock(response.data);
+        console.log("Block data:", response.data);
       }
     } catch (error) {
       console.error("Error fetching block:", error);
