@@ -100,14 +100,12 @@ const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
   const menuRef = useRef(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
-  // Fermer le menu si on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -115,19 +113,20 @@ const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
   }, []);
 
   const handleView = () => {
-    console.log("View Block", block);
     setIsBlockModalOpen(true);
   };
 
   const handleEdit = () => {
-    console.log("Edit Block", block);
     setIsMenuOpen(false);
     handleEditBlock(block);
   };
 
   return (
     <>
-      <motion.div className="relative bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition">
+      <motion.div
+        className="relative bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition cursor-pointer"
+        onClick={handleView}
+      >
         {block.picture ? (
           <img
             src={getBackendImageUrl(block.picture)}
@@ -166,7 +165,11 @@ const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
         </div>
 
         {/* Menu dropdown */}
-        <div className="absolute top-40 right-2" ref={menuRef}>
+        <div
+          className="absolute top-40 right-2 z-10"
+          ref={menuRef}
+          onClick={(e) => e.stopPropagation()} // stop click from bubbling to parent
+        >
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="text-gray-600 hover:text-gray-900"
@@ -176,20 +179,26 @@ const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
           {isMenuOpen && (
             <div className="absolute right-5 -top-5 bg-white border rounded-lg shadow-lg w-40 mt-2 z-50">
               <button
-                onClick={handleView}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView();
+                }}
                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
               >
                 View Block
               </button>
               <button
-                onClick={handleEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
               >
                 Edit Block
               </button>
               <button
                 onClick={async (e) => {
-                  e.preventDefault();
+                  e.stopPropagation();
                   await handleDeleteBlock(block._id);
                 }}
                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
@@ -200,6 +209,7 @@ const BlockCard = ({ block, handleEditBlock, handleDeleteBlock }) => {
           )}
         </div>
       </motion.div>
+
       {isBlockModalOpen && (
         <BlockModal
           show={isBlockModalOpen}
