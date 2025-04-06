@@ -10,8 +10,6 @@ import { useAuth } from "@/context/AuthContext";
 const Sidebar = () => {
   const { user, logout } = useAuth();
 
-  if (!user) return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -27,6 +25,8 @@ const Sidebar = () => {
     document.addEventListener("touchstart", handleSwipe);
     return () => document.removeEventListener("touchstart", handleSwipe);
   }, []);
+
+  if (!user) return null;
 
   return (
     <div className="flex sm:z-10 md:z-0">
