@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axiosInstance from "@/utils/axiosConfig";
 import Treemap from "./Treemap";
 
-const BlockVisualizer = ({ rootBlockId, warehouse }) => {
+const BlockVisualizer = ({ rootBlockId, warehouse, onEdit }) => {
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +14,11 @@ const BlockVisualizer = ({ rootBlockId, warehouse }) => {
   useEffect(() => {
     fetchBlock(rootBlockId, null);
   }, [rootBlockId]);
+
+  const handleOnEdit = () => {
+    if (onEdit) onEdit();
+    else fetchBlock(rootBlockId, null);
+  };
 
   const fetchBlock = async (blockId, color) => {
     setLoading(true);
@@ -37,9 +42,15 @@ const BlockVisualizer = ({ rootBlockId, warehouse }) => {
 
   useEffect(() => {
     if (!warehouse) return;
-    setBlocks(warehouse.blocs);
-    setLoading(false);
+
+    // Empêcher les updates inutiles (surtout si warehouse est identique)
+    setBlocks((prev) => {
+      const same = JSON.stringify(prev) === JSON.stringify(warehouse.blocs);
+      return same ? prev : warehouse.blocs;
+    });
+
     setRootName(warehouse.name);
+    setLoading(false);
   }, [warehouse]);
 
   const handleGoBack = () => {
@@ -68,6 +79,7 @@ const BlockVisualizer = ({ rootBlockId, warehouse }) => {
     fetchBlock(block._id, color);
   };
 
+  if (loading) return <div className="text-center">Loading...</div>;
   return (
     <div className="flex flex-col w-full h-full">
       <div className="flex items-center gap-3 mb-4">
@@ -101,6 +113,7 @@ const BlockVisualizer = ({ rootBlockId, warehouse }) => {
           handleOnClick={handleOnClick}
           rootColor={rootColor}
           distributionMode={distributionMode}
+          onEdit={handleOnEdit}
         />
       </div>
     </div>

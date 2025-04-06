@@ -1,7 +1,7 @@
 import React from "react";
 import BlockVisualizer from "./BlockVisualizer";
 
-const BlockVisualizerModal = ({ rootBlockId, warehouse, onClose }) => {
+const BlockVisualizerModal = ({ rootBlockId, warehouse, onClose, onEdit }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white p-6 rounded-lg shadow-2xl max-w-[90vw] max-h-[90vh] w-[650px] h-[550px] flex flex-col relative">
@@ -14,7 +14,11 @@ const BlockVisualizerModal = ({ rootBlockId, warehouse, onClose }) => {
             X
           </button>
         </div>
-        <BlockVisualizer rootBlockId={rootBlockId} warehouse={warehouse} />
+        <BlockVisualizer
+          rootBlockId={rootBlockId}
+          warehouse={warehouse}
+          onEdit={onEdit}
+        />
       </div>
     </div>
   );

@@ -79,7 +79,7 @@ const BlockModal = ({ blockId, show, onHide }) => {
               <>
                 {activeTab === "info" && <BlockInfoTab block={block} />}
                 {activeTab === "contained" && (
-                  <ContainedBlocksTab block={block} onEdit={fetchBlock} />
+                  <ContainedBlocksTab block={block} />
                 )}
                 {activeTab === "visualizer" &&
                   (block.blocs?.length > 0 ? (

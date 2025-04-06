@@ -94,6 +94,7 @@ const WarehousePage = () => {
       {isBlockVizualisationModalOpen && (
         <BlockVisualizerModal
           warehouse={warehouse}
+          onEdit={fetchWarehouse}
           onClose={() => setIsBlockVizualisationModalOpen(false)}
         />
       )}
