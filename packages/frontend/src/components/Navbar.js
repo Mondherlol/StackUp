@@ -39,7 +39,13 @@ const Navbar = () => {
       {isOpen && (
         <div className="absolute top-14 right-6 bg-white shadow-lg rounded-lg w-48 py-2">
           <ul className="text-gray-700">
-            <li className="flex items-center space-x-3 px-4 py-2 hover:bg-blue-100 cursor-pointer">
+            <li
+              onClick={() => {
+                router.push("/settings");
+                setIsOpen(false);
+              }}
+              className="flex items-center space-x-3 px-4 py-2 hover:bg-blue-100 cursor-pointer"
+            >
               <FiSettings className="text-blue-600" />
               <span>Paramètres</span>
             </li>
