@@ -27,8 +27,18 @@ const TagsManagement = () => {
   const fetchWarehouses = async () => {
     try {
       const response = await axiosInstance.get("/warehouse");
-      setWarehouses(response.data.warehouses);
-      response.data.warehouses.forEach((warehouse) => fetchTags(warehouse._id));
+      const fetchedWarehouses = response.data.warehouses;
+      setWarehouses(fetchedWarehouses);
+
+      // Préremplir warehouseId seulement s'il n'est pas encore défini
+      if (fetchedWarehouses.length === 1 && !newTag.warehouseId) {
+        setNewTag((prev) => ({
+          ...prev,
+          warehouseId: fetchedWarehouses[0]._id,
+        }));
+      }
+
+      fetchedWarehouses.forEach((warehouse) => fetchTags(warehouse._id));
     } catch (error) {
       console.error("Error fetching warehouses:", error);
     }
@@ -51,7 +61,11 @@ const TagsManagement = () => {
       await axiosInstance.post(`/tag/${newTag.warehouseId}`, newTag);
       toast.success("Tag added successfully");
       fetchTags(newTag.warehouseId);
-      setNewTag({ name: "", color: getRandomColor(), warehouseId: "" });
+      setNewTag((prev) => ({
+        name: "",
+        color: getRandomColor(),
+        warehouseId: prev.warehouseId,
+      }));
     } catch (error) {
       console.error("Error adding tag:", error);
       toast.error(error.response?.data?.message || "An error occured");

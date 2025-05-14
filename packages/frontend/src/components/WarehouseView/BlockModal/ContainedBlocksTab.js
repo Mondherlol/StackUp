@@ -84,7 +84,6 @@ const ContainedBlocksTab = ({ block, onEdit }) => {
           isOpen={isEditBlockModalOpen}
           onClose={() => setIsEditBlockModalOpen(false)}
           block={selectedBlock}
-          warehouseId={block.warehouse}
           onEdit={(updatedBlock) => {
             onEdit();
             setSelectedBlock(null);

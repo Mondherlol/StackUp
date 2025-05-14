@@ -1,5 +1,6 @@
 const Bloc = require("../models/blocModel");
 const Warehouse = require("../models/warehouseModel");
+const Tag = require("../models/tagModel");
 const mongoose = require("mongoose");
 
 const path = require("path");
@@ -562,15 +563,33 @@ const searchBloc = async (req, res) => {
   try {
     const { warehouseId } = req.params;
     const { query, tags, sortBy } = req.query;
+
+    let tagIdsMatchingQuery = [];
+
+    // Étape 1 : chercher les tags qui matchent la query
+    if (query) {
+      const matchingTags = await Tag.find({
+        name: { $regex: query, $options: "i" },
+      }).select("_id");
+      tagIdsMatchingQuery = matchingTags.map((tag) => tag._id);
+    }
+
+    // Étape 2 : construire le filtre
     const filter = {
       warehouse: warehouseId,
-      name: { $regex: query || "", $options: "i" },
+      $or: [
+        { name: { $regex: query || "", $options: "i" } },
+        { tags: { $in: tagIdsMatchingQuery } },
+      ],
     };
 
     if (tags) {
-      filter.tags = { $in: tags.split(",") };
+      filter.tags = {
+        $all: tags.split(",").map((id) => id.trim()),
+      };
     }
 
+    // Tri
     const sortOptions = {};
     if (sortBy) {
       const sortFields = sortBy.split(",");
