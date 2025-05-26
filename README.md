@@ -5,11 +5,13 @@ A modern, monorepo-based inventory management system that allows for recursive i
 ## 🌟 Features
 
 - **📦 Recursive Inventory Management**
+
   - Create and manage inventory items
   - Support for nested item hierarchies
   - Flexible item relationships
 
 - **💻 Modern Tech Stack**
+
   - React-based frontend with modern UI/UX
   - Express.js backend with RESTful API
   - Monorepo structure using npm workspaces
@@ -22,12 +24,14 @@ A modern, monorepo-based inventory management system that allows for recursive i
 ## 🛠 Tech Stack
 
 ### Frontend
+
 - React
 - Axios for API communication
 - Modern UI components
 - State management with React hooks
 
 ### Backend
+
 - Node.js with Express
 - RESTful API architecture
 - MongoDB database (configurable)
@@ -35,6 +39,7 @@ A modern, monorepo-based inventory management system that allows for recursive i
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - npm (comes with Node.js)
 - MongoDB (optional)
@@ -42,17 +47,20 @@ A modern, monorepo-based inventory management system that allows for recursive i
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/StackUp.git
    cd StackUp
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start the development servers**
+
    ```bash
    # Start both frontend and backend
    npm run dev
@@ -63,35 +71,53 @@ A modern, monorepo-based inventory management system that allows for recursive i
 
 ## 📡 API Endpoints
 
-| Method | Endpoint         | Description           |
-|--------|-----------------|----------------------|
-| GET    | /api/items      | Retrieve all items    |
-| GET    | /api/items/:id  | Get item by ID       |
-| POST   | /api/items      | Create a new item    |
-| PUT    | /api/items/:id  | Update an item       |
-| DELETE | /api/items/:id  | Delete an item       |
+The complete API documentation is available via Swagger UI at: `http://localhost:9091/api-docs`
+
+The main API routes are:
+
+| Method | Endpoint       | Description          |
+| ------ | -------------- | -------------------- |
+| GET    | /api/user      | User management      |
+| GET    | /api/warehouse | Warehouse management |
+| GET    | /api/bloc      | Block management     |
+| GET    | /api/note      | Note management      |
+| GET    | /api/tag       | Tag management       |
+
+Each route has its own CRUD (Create, Read, Update, Delete) operations detailed in the Swagger documentation.
 
 ## 📝 Data Structure
 
 ```json
 {
-  "id": "item123",
-  "name": "Toolbox",
-  "description": "Metal toolbox containing hand tools",
-  "children": [
+  "name": "Block name",
+  "picture": "Image URL",
+  "parent": "Parent block ID",
+  "height": 100,
+  "width": 50,
+  "depth": 30,
+  "weight": 25,
+  "maxWeight": 100,
+  "position": {
+    "x": 0,
+    "y": 0
+  },
+  "blocs": ["Sub-blocks IDs"],
+  "tags": ["Tags IDs"],
+  "customFields": [
     {
-      "id": "item456",
-      "name": "Hammer",
-      "description": "Steel hammer"
-    },
-    {
-      "id": "item789",
-      "name": "Screwdriver Set",
-      "description": "Set of flat and Phillips screwdrivers"
+      "field": "Custom field ID",
+      "value": "Field value"
     }
-  ]
+  ],
+  "warehouse": "Warehouse ID",
+  "notes": ["Notes IDs"],
+  "addedBy": "User ID",
+  "createdAt": "2024-03-21T10:00:00.000Z",
+  "lastUpdate": "2024-03-21T10:00:00.000Z"
 }
 ```
+
+This structure represents a block in the system, which can contain other blocks (recursive structure) and be associated with tags, notes, and custom fields.
 
 ## 🎯 Use Cases
 
@@ -103,17 +129,20 @@ A modern, monorepo-based inventory management system that allows for recursive i
 ## 🗺 Roadmap
 
 ### Phase 1 (Current)
+
 - ✅ Basic CRUD operations
 - ✅ Recursive item support
 - ✅ Monorepo setup
 
 ### Phase 2 (Upcoming)
+
 - ⬜ User authentication
 - ⬜ Role-based access control
 - ⬜ Bulk import/export
 - ⬜ Advanced search and filtering
 
 ### Phase 3 (Future)
+
 - ⬜ Drag-and-drop UI
 - ⬜ Real-time collaboration
 - ⬜ Activity logging
@@ -126,6 +155,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
-
-
-
