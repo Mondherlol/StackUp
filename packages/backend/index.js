@@ -1,5 +1,7 @@
 const express = require("express");
 const logger = require("morgan");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const http = require("http");
 const mongoose = require("mongoose");
@@ -13,6 +15,28 @@ const path = require("path");
 const server = http.createServer(app);
 
 const port = 9091;
+
+// Configuration Swagger
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "StackUp API Documentation",
+      version: "1.0.0",
+      description: "Documentation de l'API StackUp",
+    },
+    servers: [
+      {
+        url: `http://localhost:${port}`,
+        description: "Serveur de développement",
+      },
+    ],
+  },
+  apis: ["./routes/*.js"], // Chemin vers les fichiers contenant les routes
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Database connection
 mongoose
