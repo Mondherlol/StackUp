@@ -128,25 +128,38 @@ This structure represents a block in the system, which can contain other blocks 
 
 ## 🗺 Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Completed)
 
-- ✅ Basic CRUD operations
-- ✅ Recursive item support
-- ✅ Monorepo setup
+- ✅ Basic CRUD operations for all entities
+- ✅ User management system
+- ✅ Warehouse management
+- ✅ Block management with recursive structure
+- ✅ Note system
+- ✅ Tag system
+- ✅ Custom fields support
+- ✅ Position tracking for blocks
+- ✅ Weight and dimension management
 
-### Phase 2 (Upcoming)
+### Phase 2 (In Progress)
 
-- ⬜ User authentication
-- ⬜ Role-based access control
-- ⬜ Bulk import/export
 - ⬜ Advanced search and filtering
+- ⬜ Bulk import/export functionality
+- ⬜ Image optimization for block pictures
+- ⬜ Enhanced custom fields management
+- ⬜ Block movement history tracking
+- ⬜ Warehouse capacity management
+- ⬜ User roles and permissions system
 
 ### Phase 3 (Future)
 
-- ⬜ Drag-and-drop UI
-- ⬜ Real-time collaboration
-- ⬜ Activity logging
-- ⬜ Analytics dashboard
+- ⬜ Real-time collaboration features
+- ⬜ Mobile application
+- ⬜ QR code generation for blocks
+- ⬜ Advanced analytics dashboard
+- ⬜ Automated inventory suggestions
+- ⬜ Integration with external systems
+- ⬜ Multi-language support
+- ⬜ API rate limiting and security enhancements
 
 ## 🤝 Contributing
 
