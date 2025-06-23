@@ -23,16 +23,16 @@ const swaggerOptions = {
     info: {
       title: "StackUp API Documentation",
       version: "1.0.0",
-      description: "Documentation de l'API StackUp",
+      description: "Documentation of the Stackup API",
     },
     servers: [
       {
         url: `http://localhost:${port}`,
-        description: "Serveur de développement",
+        description: "Dev server",
       },
     ],
   },
-  apis: ["./routes/*.js"], // Chemin vers les fichiers contenant les routes
+  apis: ["./routes/*.js"], // Path to files containing the roads
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);

@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
             <Toaster />
             {children}
           </main>{" "}
-          {/* Permet au contenu de prendre l’espace restant */}
+          {/* Allows the content to take the remaining space */}
         </AuthProvider>
       </body>
     </html>

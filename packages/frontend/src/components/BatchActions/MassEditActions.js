@@ -25,26 +25,26 @@ const MassEditActions = ({ selectedItems, onCancel, onUpdate }) => {
 
   const actions = {
     tags: {
-      label: "Modifier les tags",
+      label: "Modify tags",
       icon: <FiTag className="mr-2" />,
       component: <EditTags batch={selectedItems} onSave={handleSave} />,
       onSave: () => document.getElementById("save-edit-tags")?.click(),
     },
 
     name: {
-      label: "Modifier le nom",
+      label: "Modify name",
       icon: <FiEdit className="mr-2" />,
       component: <EditName batch={selectedItems} onSave={handleSave} />,
       onSave: () => document.getElementById("save-edit-name")?.click(),
     },
     dimensions: {
-      label: "Modifier les dimensions",
+      label: "Modify dimensions",
       icon: <FiMaximize className="mr-2" />,
       component: <EditDimensions batch={selectedItems} onSave={handleSave} />,
       onSave: () => document.getElementById("save-edit-dimensions")?.click(),
     },
     picture: {
-      label: "Modifier l’image",
+      label: "Modify image",
       icon: <FiImage className="mr-2" />,
       component: <EditPicture batch={selectedItems} onSave={handleSave} />,
       onSave: () => document.getElementById("save-edit-picture")?.click(),

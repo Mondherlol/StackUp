@@ -145,7 +145,7 @@ const EditBlockModal = ({ isOpen, onClose, onEdit, block, parent }) => {
       const formDataToSend = new FormData();
 
       Object.keys(formData).forEach((key) => {
-        // Vérifie si la valeur est null ou undefined avant de l'ajouter
+        // Check if the value is null or undefined before adding it
         if (formData[key] !== null && formData[key] !== undefined) {
           formDataToSend.append(key, formData[key]);
         }

@@ -25,7 +25,7 @@ const BlockVisualizer = ({ rootBlockId, warehouse, onEdit }) => {
     try {
       const response = await axiosInstance.get(`/bloc/${blockId}`);
       if (response.status === 200) {
-        // Ajouter l'état uniquement si ce n'est pas un premier appel
+        // Add the state only if it is not a first call
         if (history.length > 0 || blockId !== rootBlockId) {
           setHistory((prev) => [...prev, { blocks, rootColor }]);
         }
@@ -43,7 +43,7 @@ const BlockVisualizer = ({ rootBlockId, warehouse, onEdit }) => {
   useEffect(() => {
     if (!warehouse) return;
 
-    // Empêcher les updates inutiles (surtout si warehouse est identique)
+    // Prevent unnecessary updates (especially if Warehouse is identical)
     setBlocks((prev) => {
       const same = JSON.stringify(prev) === JSON.stringify(warehouse.blocs);
       return same ? prev : warehouse.blocs;

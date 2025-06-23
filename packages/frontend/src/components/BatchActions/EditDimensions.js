@@ -25,14 +25,14 @@ const EditDimensions = ({ batch, onSave }) => {
       });
 
       if (response.status === 200) {
-        toast.success("Dimensions mises à jour avec succès.");
+        toast.success("Dimensions successfully updated.");
         onSave();
       } else {
-        toast.error("Une erreur est survenue lors de la mise à jour.");
+        toast.error("An error occurred during the update.");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Une erreur est survenue");
+      toast.error(error.response?.data?.message || "An error occurred");
     }
   };
 

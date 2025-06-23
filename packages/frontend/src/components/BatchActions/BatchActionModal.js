@@ -73,11 +73,11 @@ const BatchActionModal = ({ isOpen, onClose, fetchWarehouse, warehouseId }) => {
         blocIds: selectedBlocks,
         newParentId,
       });
-      toast.success("Les blocs ont été déplacés avec succès.");
+      toast.success("The blocks were successfully moved.");
       await fetchWarehouse();
     } catch (err) {
       console.error(err.message);
-      toast.error("Une erreur s'est produite lors du déplacement des blocs.");
+      toast.error("An error occurred when moving the blocks.");
     }
   };
 
@@ -114,7 +114,7 @@ const BatchActionModal = ({ isOpen, onClose, fetchWarehouse, warehouseId }) => {
   const handleBatchAction = async (action, parentId = null) => {
     try {
       if (selectedBlocks.length > 0) {
-        if (action === "delete" && !confirm("Confirm the delete ?")) return;
+        if (action === "delete" && !confirm("Confirm the deleting ?")) return;
 
         if (action === "delete") {
           await handleDeleteBlocks();

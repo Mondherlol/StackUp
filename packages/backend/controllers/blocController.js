@@ -236,13 +236,13 @@ const updateBloc = async (req, res) => {
       warehouse,
     } = req.body;
 
-    // Vérifier si le bloc existe
+    // Block existence check
     const bloc = await Bloc.findById(blocId);
     if (!bloc) {
       return res.status(404).json({ message: "Bloc not found" });
     }
 
-    // Vérifier si l'entrepôt existe
+    // Warehouse existence check
     if (warehouse) {
       const warehouseExists = await Warehouse.findById(warehouse);
       if (!warehouseExists) {
@@ -250,7 +250,7 @@ const updateBloc = async (req, res) => {
       }
     }
 
-    // Gérer les tags
+    // Managing tags
     const updatedTags = req.body.tags
       ? Array.isArray(req.body.tags)
         ? req.body.tags
@@ -270,12 +270,12 @@ const updateBloc = async (req, res) => {
             .filter((tag) => tag !== null) // Remove invalid tags
       : [];
 
-    // Vérifier si l'image est mise à jour
+    // checking if the image is updated
     const updatedPicture = req.file
       ? `/uploads/bloc/${req.file.filename}`
       : bloc.picture;
 
-    // Mise à jour des données
+    // update data
     const updatedData = {
       name: name ?? bloc.name,
       picture: updatedPicture,
@@ -291,9 +291,9 @@ const updateBloc = async (req, res) => {
       lastUpdate: Date.now(),
     };
 
-    // Vérifier si le parent a changé
+    // checking if the parent changed
     if (parent && parent !== bloc.parent?.toString()) {
-      // Retirer le bloc de l'ancien parent
+      // Removing old parent bloc
       if (bloc.parent) {
         const oldParent = await Bloc.findById(bloc.parent);
         if (oldParent) {
@@ -304,7 +304,7 @@ const updateBloc = async (req, res) => {
         }
       }
 
-      // Ajouter le bloc au nouveau parent
+      // Adding new parent
       if (parent !== "null") {
         const newParent = await Bloc.findById(parent);
         if (newParent) {
@@ -317,7 +317,7 @@ const updateBloc = async (req, res) => {
       }
     }
 
-    // Vérifier si le poids a changé et ajuster le parent
+    // Checking if the weight changed and adjust parent
     if (weight && weight !== bloc.weight) {
       if (bloc.parent) {
         const parentBloc = await Bloc.findById(bloc.parent);
@@ -339,7 +339,7 @@ const updateBloc = async (req, res) => {
       }
     }
 
-    // Appliquer les mises à jour
+    // Apply update
     const updatedBloc = await Bloc.findByIdAndUpdate(blocId, updatedData, {
       new: true,
     }).populate("tags");
@@ -489,7 +489,7 @@ const updateTagsBatch = async (req, res) => {
       return res.status(400).json({ message: "tags must be an array" });
     }
 
-    // Vérifier si les tags sont valides
+    // Checking tag validity
     const validTags = tags.filter((tag) =>
       mongoose.Types.ObjectId.isValid(tag)
     );
@@ -497,14 +497,14 @@ const updateTagsBatch = async (req, res) => {
       return res.status(400).json({ message: "Invalid tag IDs" });
     }
 
-    // Mise à jour en boucle (peut être optimisée en bulkWrite aussi)
+    // Update loop (can be optimised with bulkWrite )
 
     for (let blocId of blocIds) {
       const bloc = await Bloc.findById(blocId);
       if (!bloc) continue;
 
       if (removeOtherTags) {
-        // Supprimer tous les tags existants
+        // Delete all tags
         bloc.tags = [];
       }
       // Add new tags if not already present
@@ -543,7 +543,7 @@ const updateDimensionsBatch = async (req, res) => {
         .json({ message: "At least one dimension must be provided" });
     }
 
-    // Mise à jour en boucle (peut être optimisée en bulkWrite aussi)
+    // Update loop
     for (let blocId of blocIds) {
       const bloc = await Bloc.findById(blocId);
       if (!bloc) continue;
@@ -566,7 +566,7 @@ const searchBloc = async (req, res) => {
 
     let tagIdsMatchingQuery = [];
 
-    // Étape 1 : chercher les tags qui matchent la query
+    // Step1: Search tags matching query
     if (query) {
       const matchingTags = await Tag.find({
         name: { $regex: query, $options: "i" },
@@ -574,7 +574,7 @@ const searchBloc = async (req, res) => {
       tagIdsMatchingQuery = matchingTags.map((tag) => tag._id);
     }
 
-    // Étape 2 : construire le filtre
+    // Step2: Create filter
     const filter = {
       warehouse: warehouseId,
       $or: [
@@ -589,7 +589,7 @@ const searchBloc = async (req, res) => {
       };
     }
 
-    // Tri
+    // Sorting
     const sortOptions = {};
     if (sortBy) {
       const sortFields = sortBy.split(",");
@@ -694,7 +694,7 @@ const changeWarehouse = async (req, res) => {
     const { blocId } = req.params;
     const { newWarehouseId } = req.body;
 
-    // Vérifier si le bloc et le nouveau warehouse existent
+    // Checking if the bloc and new warehouse exist
     const bloc = await Bloc.findById(blocId);
     if (!bloc) return res.status(404).json({ message: "Bloc not found" });
 
@@ -702,7 +702,7 @@ const changeWarehouse = async (req, res) => {
     if (!newWarehouse)
       return res.status(404).json({ message: "New warehouse not found" });
 
-    // Retirer le bloc de l'ancien warehouse
+    // Removing block from old warehouse
     const oldWarehouse = await Warehouse.findById(bloc.warehouse);
     if (oldWarehouse) {
       oldWarehouse.blocs = oldWarehouse.blocs.filter(
@@ -711,28 +711,28 @@ const changeWarehouse = async (req, res) => {
       await oldWarehouse.save();
     }
 
-    // Ajouter le bloc au nouveau warehouse
+    // Add bloc to new warehouse
     newWarehouse.blocs.push(bloc._id);
     await newWarehouse.save();
 
-    // Fonction récursive pour mettre à jour les descendants
+    // Recursively update decendents
     const updateChildrenWarehouse = async (parentId) => {
       const children = await Bloc.find({ parent: parentId });
 
       for (const child of children) {
         child.warehouse = newWarehouseId;
-        await child.save(); // ou faire un bulkWrite pour plus d’optimisation si beaucoup d’enfants
+        await child.save(); // or bulkWrite for optimisation in case of many children
 
-        // Appel récursif
+        // recursive call
         await updateChildrenWarehouse(child._id);
       }
     };
 
-    // Mettre à jour le bloc racine
+    // update root bloc
     bloc.warehouse = newWarehouseId;
     await bloc.save();
 
-    // Mettre à jour récursivement tous les descendants
+    // recursively update decendents
     await updateChildrenWarehouse(blocId);
 
     return res

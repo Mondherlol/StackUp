@@ -15,7 +15,7 @@ const BlockLayer = ({
         <Image image={backgroundImage} x={0} y={0} width={1200} height={720} />
       )}
       {blocks.map((block) => {
-        const fontSize = Math.min(block.width, block.depth) / 5; // Texte plus petit
+        const fontSize = Math.min(block.width, block.depth) / 5; // Smaller text
 
         return (
           <Group

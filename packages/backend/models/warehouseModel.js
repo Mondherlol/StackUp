@@ -14,7 +14,7 @@ const warehouseSchema = new mongoose.Schema({
     city: { type: String, required: false },
     country: { type: String, required: false },
   },
-  blocs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bloc" }], // Liste des blocs dans l'entrepôt
+  blocs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bloc" }], // Bloc list in the warehouse
   maxWeight: {
     type: Number,
     required: false,

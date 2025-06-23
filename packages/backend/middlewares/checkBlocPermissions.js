@@ -3,17 +3,17 @@ const Warehouse = require("../models/warehouseModel");
 
 const checkBlocPermissions = async (req, res, next) => {
   try {
-    const userId = req.user._id; // Récupération de l'utilisateur depuis le middleware d'auth
-    const { blocId } = req.params; // ID du bloc à modifier ou supprimer
+    const userId = req.user._id; // user fetching from the auth middleware
+    const { blocId } = req.params; // bloc ID to modify or delete
 
-    // Récupérer le bloc concerné
+    // Fetch the bloc 
     const bloc = await Bloc.findById(blocId).populate("warehouse");
 
     if (!bloc) {
       return res.status(404).json({ message: "Bloc not found" });
     }
 
-    // Récupérer le warehouse associé
+    // Fetch associated warehouse 
     const warehouse = await Warehouse.findById(bloc.warehouse).populate(
       "members.user"
     );
@@ -22,12 +22,12 @@ const checkBlocPermissions = async (req, res, next) => {
       return res.status(404).json({ message: "Warehouse non trouvé" });
     }
 
-    // Vérifier si l'utilisateur est le créateur du warehouse
+    // Check if the user is the creator of the Warehouse
     if (warehouse.addedBy.toString() === userId.toString()) {
       return next();
     }
 
-    // Vérifier si l'utilisateur est un membre avec le rôle "ADMIN" ou "MEMBER"
+    // Check if the user is a member with the role "ADMIN" or "MEMBER"
     const isAuthorized = warehouse.members.some(
       (member) =>
         member.user._id.toString() === userId.toString() &&
@@ -35,13 +35,13 @@ const checkBlocPermissions = async (req, res, next) => {
     );
 
     if (!isAuthorized) {
-      return res.status(403).json({ message: "Accès refusé" });
+      return res.status(403).json({ message: "Access denied" });
     }
 
     next();
   } catch (error) {
-    console.error("Erreur de permission:", error);
-    res.status(500).json({ message: "Erreur serveur" });
+    console.error("Error of permission:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

@@ -9,13 +9,13 @@ const path = require("path");
 
 const crypto = require("crypto");
 
-// Configuration de Multer pour stocker les images dans "uploads/"
+// Configuration of Multer to stock images in "uploads/"
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Nom unique
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique name
   },
 });
 
@@ -305,18 +305,18 @@ const deleteWarehouse = async (req, res) => {
     if (error) return res.status(error.status).json({ message: error.message });
     if (!isAuthorized) return res.status(403).json({ message: "Unauthorized" });
 
-    // Supprimer les notes associées aux blocs de l'entrepôt
+    // Delete notes associated to a warehouse
     await Note.deleteMany({
       bloc: { $in: await Block.find({ warehouse: id }).select("_id") },
     });
 
-    // Supprimer les blocks associés
+    // Remove associated blocks
     await Block.deleteMany({ warehouse: id });
 
-    // Supprimer les tags associés
+    // Remove associated tags
     await Tag.deleteMany({ warehouse: id });
 
-    // Supprimer l'entrepôt
+    // Remove warehouse
     await warehouse.deleteOne();
 
     res

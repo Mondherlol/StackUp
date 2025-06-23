@@ -144,10 +144,10 @@ const updateUser = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Vérifier si l'email est déjà utilisé par un autre utilisateur
+    // Check if the email is already used by another user
     if (email && email !== user.email) {
       const emailExists = await User.findOne({ email });
       if (emailExists) {
@@ -156,18 +156,18 @@ const updateUser = async (req, res) => {
       user.email = email;
     }
 
-    // Mettre à jour le nom d'utilisateur s'il est fourni
+    // Username update if provided
     if (username) {
       user.username = username;
     }
 
     if (req.file) {
-      console.log("Fichier reçu : ", req.file.filename);
+      console.log("Received file : ", req.file.filename);
 
       user.profilePicture = `/uploads/user/${req.file.filename}`;
     }
 
-    // Mettre à jour le mot de passe s'il est fourni
+    // Update the password if provided
     if (password) {
       if (password.length < 3) {
         return res
@@ -180,7 +180,7 @@ const updateUser = async (req, res) => {
 
     await user.save();
 
-    // Renvoyer l'utilisateur mis à jour sans le mot de passe
+    // Return the User updated without the password
     const updatedUser = await User.findById(userId).select("-password");
 
     res.status(200).json({

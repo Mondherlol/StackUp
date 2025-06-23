@@ -3,10 +3,10 @@ import toast from "react-hot-toast";
 import axiosInstance from "@/utils/axiosConfig";
 
 const EditTags = ({ batch, onSave }) => {
-  const [allTags, setAllTags] = useState([]); // Tous les tags dispo
-  const [selectedTags, setSelectedTags] = useState([]); // Tags choisis
-  const [inputValue, setInputValue] = useState(""); // Valeur du champ de saisie
-  const [suggestions, setSuggestions] = useState([]); // Suggestions filtrées
+  const [allTags, setAllTags] = useState([]); // All tags available
+  const [selectedTags, setSelectedTags] = useState([]); // Tags chosen
+  const [inputValue, setInputValue] = useState(""); // Value of the entry field
+  const [suggestions, setSuggestions] = useState([]); // Filtered suggestions
   const [removeOtherTags, setRemoveOtherTags] = useState(false);
 
   const warehouseId = batch?.[0]?.warehouse;
@@ -17,8 +17,8 @@ const EditTags = ({ batch, onSave }) => {
         const response = await axiosInstance.get(`/tag/${warehouseId}`);
         setAllTags(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des tags :", error);
-        toast.error("Impossible de charger les tags.");
+        console.error("Error when loading tags:", error);
+        toast.error("Impossible to load tags.");
       }
     };
 
@@ -48,7 +48,7 @@ const EditTags = ({ batch, onSave }) => {
 
   const handleEditTags = async () => {
     if (selectedTags.length === 0) {
-      toast.error("Veuillez sélectionner au moins un tag.");
+      toast.error("Please select at least one tag.");
       return;
     }
 
@@ -60,14 +60,14 @@ const EditTags = ({ batch, onSave }) => {
       });
 
       if (response.status === 200) {
-        toast.success("Tags mis à jour avec succès.");
+        toast.success("Successfully updated tags.");
         onSave();
       } else {
-        toast.error("Erreur lors de la mise à jour des tags.");
+        toast.error("Error when updating tags.");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Erreur inattendue.");
+      toast.error(error.response?.data?.message || "Unexpected error.");
     }
   };
 

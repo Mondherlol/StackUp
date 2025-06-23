@@ -47,7 +47,7 @@ const SearchModal = ({
     }
   };
 
-  // Filtrage & Tri
+  // Filtering and sorting
   const filteredResults = results
     .filter(
       (bloc) =>

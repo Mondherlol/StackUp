@@ -7,14 +7,14 @@ const EditPicture = ({ batch, onSave }) => {
 
   const handleEditPicture = async () => {
     if (!file) {
-      toast.error("Veuillez sélectionner une image.");
+      toast.error("Please select an image.");
       return;
     }
 
     try {
       const formData = new FormData();
       formData.append("picture", file);
-      // Au lieu de `JSON.stringify`, envoie le tableau directement
+      // Instead of `json.stringify`, sends the table directly
 
       formData.append("blocIds", JSON.stringify(batch.map((item) => item._id)));
 
@@ -31,14 +31,14 @@ const EditPicture = ({ batch, onSave }) => {
       );
 
       if (response.status === 200) {
-        toast.success("Image mise à jour avec succès.");
+        toast.success("Successful updated image.");
         onSave();
       } else {
-        toast.error("Erreur lors de la mise à jour de l'image.");
+        toast.error("Error when updating the image.");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Erreur inattendue.");
+      toast.error(error.response?.data?.message || "Unexpected error.");
     }
   };
 
